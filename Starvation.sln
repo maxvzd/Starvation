@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Starvation", "Starvation\Starvation\Starvation.csproj", "{10FE03DA-3F9C-42EB-A330-49B72088D628}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CakeBuild", "Starvation\ZZCakeBuild\CakeBuild.csproj", "{9BC72DEE-BD93-4CFE-BBF9-EFA7ABF04954}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{10FE03DA-3F9C-42EB-A330-49B72088D628}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10FE03DA-3F9C-42EB-A330-49B72088D628}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10FE03DA-3F9C-42EB-A330-49B72088D628}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10FE03DA-3F9C-42EB-A330-49B72088D628}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BC72DEE-BD93-4CFE-BBF9-EFA7ABF04954}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BC72DEE-BD93-4CFE-BBF9-EFA7ABF04954}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BC72DEE-BD93-4CFE-BBF9-EFA7ABF04954}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BC72DEE-BD93-4CFE-BBF9-EFA7ABF04954}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
