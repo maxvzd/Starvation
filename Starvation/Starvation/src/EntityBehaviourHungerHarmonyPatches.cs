@@ -4,12 +4,13 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.GameContent;
 
 namespace Starvation;
 
 [HarmonyPatchCategory("starvation")]
-public class RemoveHungerDamage
+public class EntityBehaviourHungerHarmonyPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(typeof(EntityBehaviorHunger), "SlowTick")]
@@ -39,4 +40,22 @@ public class RemoveHungerDamage
             yield return instr;
         }
     }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(EntityBehaviorHunger), "ReduceSaturation")]
+    private static void ReduceSaturationPrefix(EntityBehaviorHunger __instance, float satLossMultiplier)
+    {
+        //Replication of vanilla hunger loss (TODO: Find better way to do this)
+        satLossMultiplier *= GlobalConstants.HungerSpeedModifier;
+        satLossMultiplier *= 10;
+
+        __instance.entity.GetBehavior<EntityBehaviourBodyWeight>()?.ReduceBodyWeight(satLossMultiplier);
+    } 
+    
+    // [HarmonyPostfix]
+    // [HarmonyPatch(typeof(EntityBehaviorHunger), "ReduceSaturation")]
+    // private static void ReduceSaturationPostfix()
+    // {
+    //     
+    // } 
 }

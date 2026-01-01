@@ -17,9 +17,20 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     public float? BodyWeight
     {
         get => _bodyWeightTree?.GetFloat("weight");
-        set
+        private set
         {
-            _bodyWeightTree?.SetFloat("weight", value ?? 0); 
+            _bodyWeightTree?.SetFloat("weight", value ?? 0);
+            entity.WatchedAttributes.MarkPathDirty(PropertyName());
+        }
+    }
+
+    public float? StoredSaturation
+    {
+        get => _bodyWeightTree?.GetFloat("stored-sat");
+        private set
+        {
+            _bodyWeightTree?.SetFloat("stored-sat", value ?? 0);
+            UpdateBodyWeight();
             entity.WatchedAttributes.MarkPathDirty(PropertyName());
         }
     }
@@ -33,12 +44,15 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             _saturationLastTick = hungerBehaviour.Saturation;
         }
-        
+
         _bodyWeightTree = entity.WatchedAttributes.GetTreeAttribute(PropertyName());
         if (_bodyWeightTree is null)
         {
             entity.WatchedAttributes.SetAttribute(PropertyName(), _bodyWeightTree = new TreeAttribute());
-        } 
+           
+            const float fullStomachOnSpawnIn = 1500f;
+            StoredSaturation = (4000 * entity.World.Calendar.DaysPerMonth * 2) - fullStomachOnSpawnIn;
+        }
     }
 
     public override void OnGameTick(float deltaTime)
@@ -46,22 +60,36 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         if (entity.World.Side != EnumAppSide.Server) return;
 
         _hungerTick += deltaTime;
-        if (_hungerTick > 10)
+        if (!(_hungerTick > 10)) return;
+        
+        var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
+        if (hungerBehaviour is null) return;
+
+        var satDiff = _saturationLastTick - hungerBehaviour.Saturation;
+        if (satDiff > 0)
         {
-            var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
-            if (hungerBehaviour is null) return;
-            
-            var satDiff = _saturationLastTick - hungerBehaviour.Saturation;
-            if (satDiff > 0)
-            {
-                BodyWeight += satDiff;
-            }
-            
-            Globals.CoreApiInstance?.Logger.Debug($"_saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, BodyWeight: {BodyWeight}");
-
-
-            _saturationLastTick = hungerBehaviour.Saturation;
-            _hungerTick = 0f;
+            StoredSaturation += satDiff;
         }
+
+        //Globals.CoreApiInstance?.Logger.Debug($"_saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}");
+        _saturationLastTick = hungerBehaviour.Saturation;
+        _hungerTick = 0f;
+    }
+
+    public void ReduceBodyWeight(float saturation)
+    {
+        var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
+        if (hungerBehaviour?.Saturation <= 0)
+        {
+            StoredSaturation -= saturation;
+        }
+    }
+
+    // Eat ~4k saturation a day
+    // Takes 2 months to starve from 75kg down to critical mass of 40kg (75-40=35)
+    private void UpdateBodyWeight()
+    {
+        var weightScaling = (4000 * entity.World.Calendar.DaysPerMonth * 2) / 35;
+        BodyWeight = 40 + StoredSaturation / weightScaling;
     }
 }
