@@ -10,6 +10,15 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     private float _saturationLastTick = 0f;
     private float _hungerTick = 0f;
     private ITreeAttribute? _bodyWeightTree;
+    
+    //75kg (healthy weight) - 40kg (critical weight) = 35kg
+    private const float HEALTHY_WEIGHT = 75f;
+    private const float CRITICAL_WEIGHT = 40f;
+    private const float EXPECTED_SATURATION_PER_DAY = 4000f;
+    private const float NUMBER_OF_MONTHS_TO_STARVE = 1.5f;
+    
+    private float WeightScaling =>  AmountOfSatToStarve / (HEALTHY_WEIGHT - CRITICAL_WEIGHT);
+    private float AmountOfSatToStarve => EXPECTED_SATURATION_PER_DAY * entity.World.Calendar.DaysPerMonth * NUMBER_OF_MONTHS_TO_STARVE;
 
     public override string PropertyName() => ENTITY_KEY;
     public const string ENTITY_KEY = "body-weight";
@@ -50,8 +59,8 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             entity.WatchedAttributes.SetAttribute(PropertyName(), _bodyWeightTree = new TreeAttribute());
            
-            const float fullStomachOnSpawnIn = 1500f;
-            StoredSaturation = (4000 * entity.World.Calendar.DaysPerMonth * 2) - fullStomachOnSpawnIn;
+            const float fullStomachSatOnSpawnIn = 1500f;
+            StoredSaturation = GetSatForWeight(60) - fullStomachSatOnSpawnIn;
         }
     }
 
@@ -71,7 +80,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
             StoredSaturation += satDiff;
         }
 
-        //Globals.CoreApiInstance?.Logger.Debug($"_saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}");
+        Globals.CoreApiInstance?.Logger.Debug($"_saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}");
         _saturationLastTick = hungerBehaviour.Saturation;
         _hungerTick = 0f;
     }
@@ -84,12 +93,34 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
             StoredSaturation -= saturation;
         }
     }
+    
+    public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)
+    {
+        if (damageSource is { Type: EnumDamageType.Heal, Source: EnumDamageSource.Revive })
+        {
+            var newSaturation = StoredSaturation / 2;
+            var satAt50Kg = GetSatForWeight(50);
+            if (newSaturation < satAt50Kg)
+            {
+                newSaturation = satAt50Kg;
+            }
+            
+            StoredSaturation = newSaturation;
+        }
+    }
 
     // Eat ~4k saturation a day
     // Takes 2 months to starve from 75kg down to critical mass of 40kg (75-40=35)
     private void UpdateBodyWeight()
     {
-        var weightScaling = (4000 * entity.World.Calendar.DaysPerMonth * 2) / 35;
-        BodyWeight = 40 + StoredSaturation / weightScaling;
+        //var weightScaling = (4000 * entity.World.Calendar.DaysPerMonth * 2) / 35;
+        BodyWeight = CRITICAL_WEIGHT + StoredSaturation / WeightScaling;
+    }
+    
+    private float GetSatForWeight(float weightInKg)
+    {
+        var weightDiff = weightInKg - CRITICAL_WEIGHT;
+
+        return weightDiff * AmountOfSatToStarve / (HEALTHY_WEIGHT - CRITICAL_WEIGHT);
     }
 }
