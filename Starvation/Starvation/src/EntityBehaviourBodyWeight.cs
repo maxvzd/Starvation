@@ -8,13 +8,17 @@ namespace Starvation;
 public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 {
     private float _saturationLastTick = 0f;
+    private float _hourAtLastTick = 0f;
     private float _hungerTick = 0f;
     private ITreeAttribute? _bodyWeightTree;
     
-    //75kg (healthy weight) - 40kg (critical weight) = 35kg
+    //A regular weight for a regular man
     private const float HEALTHY_WEIGHT = 75f;
+    //Roughly how low you'd have to be to feel organ failure
     private const float CRITICAL_WEIGHT = 40f;
+    //Roughly how much you'd expect a player to eat in a day to maintain weight
     private const float EXPECTED_SATURATION_PER_DAY = 4000f;
+    //How long you would starve from a healthy weight of 75kg
     private const float NUMBER_OF_MONTHS_TO_STARVE = 1.5f;
     
     private float WeightScaling =>  AmountOfSatToStarve / (HEALTHY_WEIGHT - CRITICAL_WEIGHT);
@@ -53,6 +57,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             _saturationLastTick = hungerBehaviour.Saturation;
         }
+        _hourAtLastTick = entity.World.Calendar.HourOfDay;
 
         _bodyWeightTree = entity.WatchedAttributes.GetTreeAttribute(PropertyName());
         if (_bodyWeightTree is null)
@@ -67,53 +72,76 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     public override void OnGameTick(float deltaTime)
     {
         if (entity.World.Side != EnumAppSide.Server) return;
-
+        
         _hungerTick += deltaTime;
-        if (!(_hungerTick > 10)) return;
+        if (_hungerTick < 10) return;
+
+        if (entity is EntityPlayer player 
+            && player.World.PlayerByUid(player.PlayerUID).WorldData.CurrentGameMode is not EnumGameMode.Survival) return;
         
         var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
         if (hungerBehaviour is null) return;
 
+        DigestFood(hungerBehaviour);
+        MetaboliseFoodStores();
+            
+        _hourAtLastTick = entity.World.Calendar.HourOfDay;
+        _saturationLastTick = hungerBehaviour.Saturation;
+        _hungerTick = 0f;
+    }
+
+    private void DigestFood(EntityBehaviorHunger hungerBehaviour)
+    {
         var satDiff = _saturationLastTick - hungerBehaviour.Saturation;
         if (satDiff > 0)
         {
             StoredSaturation += satDiff;
         }
-
-        Globals.CoreApiInstance?.Logger.Debug($"_saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}");
-        _saturationLastTick = hungerBehaviour.Saturation;
-        _hungerTick = 0f;
+        Globals.CoreApiInstance?.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}");
     }
 
-    public void ReduceBodyWeight(float saturation)
+    private void MetaboliseFoodStores()
     {
-        var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
-        if (hungerBehaviour?.Saturation <= 0)
+        var calculatedHungerRate = entity.Stats.GetBlended("hungerrate");
+            
+        var hoursPerDay = entity.World.Calendar.HoursPerDay;
+        var lossPerHour = EXPECTED_SATURATION_PER_DAY / hoursPerDay * calculatedHungerRate;
+
+        var hourDiff = CalculateTimeSinceHungerLastChecked();
+
+        StoredSaturation -= lossPerHour * hourDiff;
+            
+        var currentHour = entity.World.Calendar.HourOfDay;
+        Globals.CoreApiInstance?.Logger.Debug($"Metabolising: currentHour: {currentHour}, hourLastTick: {_hourAtLastTick}, lossPerHour:{lossPerHour}, hourDIff {hourDiff}, loss: {lossPerHour * hourDiff}");
+    }
+
+    private float CalculateTimeSinceHungerLastChecked()
+    {
+        var hoursPerDay = entity.World.Calendar.HoursPerDay;
+        var currentHour = entity.World.Calendar.HourOfDay;
+        if (currentHour < _hourAtLastTick)
         {
-            StoredSaturation -= saturation;
+            currentHour += hoursPerDay;
         }
+        return currentHour - _hourAtLastTick;
     }
     
     public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)
     {
-        if (damageSource is { Type: EnumDamageType.Heal, Source: EnumDamageSource.Revive })
+        if (damageSource is not { Type: EnumDamageType.Heal, Source: EnumDamageSource.Revive }) return;
+        
+        var newSaturation = StoredSaturation / 2;
+        var satAt50Kg = GetSatForWeight(50);
+        if (newSaturation < satAt50Kg)
         {
-            var newSaturation = StoredSaturation / 2;
-            var satAt50Kg = GetSatForWeight(50);
-            if (newSaturation < satAt50Kg)
-            {
-                newSaturation = satAt50Kg;
-            }
-            
-            StoredSaturation = newSaturation;
+            newSaturation = satAt50Kg;
         }
+            
+        StoredSaturation = newSaturation;
     }
-
-    // Eat ~4k saturation a day
-    // Takes 2 months to starve from 75kg down to critical mass of 40kg (75-40=35)
+    
     private void UpdateBodyWeight()
     {
-        //var weightScaling = (4000 * entity.World.Calendar.DaysPerMonth * 2) / 35;
         BodyWeight = CRITICAL_WEIGHT + StoredSaturation / WeightScaling;
     }
     

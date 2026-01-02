@@ -42,15 +42,23 @@ public class EntityBehaviourHungerHarmonyPatches
     }
 
     [HarmonyPrefix]
-    [HarmonyPatch(typeof(EntityBehaviorHunger), "ReduceSaturation")]
-    private static void ReduceSaturationPrefix(EntityBehaviorHunger __instance, float satLossMultiplier)
+    [HarmonyPatch(typeof(EntityBehaviorHunger), "OnEntityReceiveSaturation")]
+    public static void ReceiveSaturationPrefix(EntityBehaviorHunger __instance, float saturation, EnumFoodCategory foodCat = EnumFoodCategory.Unknown, float saturationLossDelay = 10, float nutritionGainMultiplier = 1f)
     {
-        //Replication of vanilla hunger loss (TODO: Find better way to do this)
-        satLossMultiplier *= GlobalConstants.HungerSpeedModifier;
-        satLossMultiplier *= 10;
-
-        __instance.entity.GetBehavior<EntityBehaviourBodyWeight>()?.ReduceBodyWeight(satLossMultiplier);
-    } 
+        //if saturation + currentSaturation is > MaxSat + someThreshold then vomit
+        // Lose all current saturation 
+    }
+    
+    // [HarmonyPrefix]
+    // [HarmonyPatch(typeof(EntityBehaviorHunger), "ReduceSaturation")]
+    // private static void ReduceSaturationPrefix(EntityBehaviorHunger __instance, float satLossMultiplier)
+    // {
+    //     //Replication of vanilla hunger loss (TODO: Find better way to do this)
+    //     satLossMultiplier *= GlobalConstants.HungerSpeedModifier;
+    //     satLossMultiplier *= 10;
+    //
+    //     __instance.entity.GetBehavior<EntityBehaviourBodyWeight>()?.ReduceBodyWeight(satLossMultiplier);
+    // } 
     
     // [HarmonyPostfix]
     // [HarmonyPatch(typeof(EntityBehaviorHunger), "ReduceSaturation")]
