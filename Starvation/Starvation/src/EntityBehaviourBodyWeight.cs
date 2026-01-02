@@ -1,4 +1,5 @@
-﻿using Vintagestory.API.Common;
+﻿using Starvation.Config;
+using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
@@ -11,18 +12,9 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     private float _hourAtLastTick = 0f;
     private float _hungerTick = 0f;
     private ITreeAttribute? _bodyWeightTree;
-    
-    //A regular weight for a regular man
-    private const float HEALTHY_WEIGHT = 75f;
-    //Roughly how low you'd have to be to feel organ failure
-    private const float CRITICAL_WEIGHT = 40f;
-    //Roughly how much you'd expect a player to eat in a day to maintain weight
-    private const float EXPECTED_SATURATION_PER_DAY = 4000f;
-    //How long you would starve from a healthy weight of 75kg
-    private const float NUMBER_OF_MONTHS_TO_STARVE = 1.5f;
-    
-    private float WeightScaling =>  AmountOfSatToStarve / (HEALTHY_WEIGHT - CRITICAL_WEIGHT);
-    private float AmountOfSatToStarve => EXPECTED_SATURATION_PER_DAY * entity.World.Calendar.DaysPerMonth * NUMBER_OF_MONTHS_TO_STARVE;
+    private static BodyWeightConfig Config => StarvationModSystem.Config ?? new BodyWeightConfig();
+    private float WeightToSaturationScale =>  AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
+    private float AmountOfSatToStarve => Config.ExpectedSaturationPerDay * entity.World.Calendar.DaysPerMonth * Config.NumberOfMonthsToStarve;
 
     public override string PropertyName() => ENTITY_KEY;
     public const string ENTITY_KEY = "body-weight";
@@ -105,7 +97,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         var calculatedHungerRate = entity.Stats.GetBlended("hungerrate");
             
         var hoursPerDay = entity.World.Calendar.HoursPerDay;
-        var lossPerHour = EXPECTED_SATURATION_PER_DAY / hoursPerDay * calculatedHungerRate;
+        var lossPerHour = Config.ExpectedSaturationPerDay / hoursPerDay * calculatedHungerRate;
 
         var hourDiff = CalculateTimeSinceHungerLastChecked();
 
@@ -142,13 +134,13 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     
     private void UpdateBodyWeight()
     {
-        BodyWeight = CRITICAL_WEIGHT + StoredSaturation / WeightScaling;
+        BodyWeight = Config.CriticalWeight + StoredSaturation / WeightToSaturationScale;
     }
     
     private float GetSatForWeight(float weightInKg)
     {
-        var weightDiff = weightInKg - CRITICAL_WEIGHT;
+        var weightDiff = weightInKg - Config.CriticalWeight;
 
-        return weightDiff * AmountOfSatToStarve / (HEALTHY_WEIGHT - CRITICAL_WEIGHT);
+        return weightDiff * WeightToSaturationScale;
     }
 }

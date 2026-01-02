@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
+using Starvation.Config;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -9,7 +11,13 @@ public class StarvationModSystem : ModSystem
 {
     private Harmony? _patcher;
     private GuiDialog? _dialog;
-    
+
+    public static BodyWeightConfig? Config
+    {
+        private set;
+        get;
+    }
+
     public override void Start(ICoreAPI api)
     {
         base.Start(api);
@@ -25,6 +33,24 @@ public class StarvationModSystem : ModSystem
         {
             _patcher = new Harmony(Mod.Info.ModID);
             _patcher.PatchCategory(Mod.Info.ModID);
+        }
+        Config = LoadModConfig(api);
+    }
+
+    private BodyWeightConfig LoadModConfig(ICoreAPICommon api)
+    {
+        try
+        {
+            var config = api.LoadModConfig<BodyWeightConfig>("BodyWeightConfig.json") ?? new BodyWeightConfig();
+            api.StoreModConfig(config, "BodyWeightConfig.json");
+
+            return config;
+        }
+        catch(Exception e)
+        {
+            Mod.Logger.Error("Failed to load body weight config");
+            Mod.Logger.Error(e);
+            return new BodyWeightConfig();
         }
     }
     
