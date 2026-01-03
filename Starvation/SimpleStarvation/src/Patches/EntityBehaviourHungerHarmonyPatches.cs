@@ -9,7 +9,7 @@ using Vintagestory.GameContent;
 
 namespace Starvation.Patches;
 
-[HarmonyPatchCategory("starvation")]
+[HarmonyPatchCategory("simplestarvation")]
 public class EntityBehaviourHungerHarmonyPatches
 {
     [HarmonyTranspiler]

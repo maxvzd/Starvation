@@ -1,13 +1,13 @@
 {
     "$schema": "https://moddbcdn.vintagestory.at/schema/modinfo.latest.json",
     "type": "Code",
-    "modid": "starvation",
-    "name": "Starvation",
+    "modid": "simplestarvation",
+    "name": "Simple Starvation",
     "authors": [
-        "Unknown"
+        "MaxVZD"
     ],
-    "description": "To be added",
-    "version": "1.0.0",
+    "description": "A simple overhaul to starvation",
+    "version": "0.0.1",
     "dependencies": {
         "game": "1.21.0"
     }

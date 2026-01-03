@@ -2,7 +2,7 @@
 
 namespace Starvation.Config;
 
-public class BodyWeightConfig
+public class SimpleStarvationConfig
 {
     /// <summary>
     /// A regular weight for a regular man

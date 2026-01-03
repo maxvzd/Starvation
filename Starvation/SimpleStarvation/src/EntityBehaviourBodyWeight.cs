@@ -14,7 +14,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     private float _hourAtLastTick = 0f;
     private float _hungerTick = 0f;
     private ITreeAttribute? _bodyWeightTree;
-    private static BodyWeightConfig Config => StarvationModSystem.Config ?? new BodyWeightConfig();
+    private static SimpleStarvationConfig Config => SimpleStarvationModSystem.Config ?? new SimpleStarvationConfig();
     private float WeightToSaturationScale =>  AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
     private float AmountOfSatToStarve => Config.ExpectedSaturationPerDay * entity.World.Calendar.DaysPerMonth * Config.NumberOfMonthsToStarve;
     

@@ -7,12 +7,12 @@ using Vintagestory.API.Server;
 
 namespace Starvation;
 
-public class StarvationModSystem : ModSystem
+public class SimpleStarvationModSystem : ModSystem
 {
     private Harmony? _patcher;
     private GuiDialog? _dialog;
 
-    public static BodyWeightConfig? Config
+    public static SimpleStarvationConfig? Config
     {
         private set;
         get;
@@ -31,21 +31,21 @@ public class StarvationModSystem : ModSystem
         Config = LoadModConfig(api);
     }
 
-    private BodyWeightConfig LoadModConfig(ICoreAPICommon api)
+    private SimpleStarvationConfig LoadModConfig(ICoreAPICommon api)
     {
         try
         {
-            var config = api.LoadModConfig<BodyWeightConfig>("BodyWeightConfig.json") ?? new BodyWeightConfig();
+            var config = api.LoadModConfig<SimpleStarvationConfig>("SimpleStarvation.json") ?? new SimpleStarvationConfig();
 
-            api.StoreModConfig(config, "BodyWeightConfig.json");
+            api.StoreModConfig(config, "SimpleStarvation.json");
 
             return config;
         }
         catch(Exception e)
         {
-            Mod.Logger.Error("Failed to load body weight config");
+            Mod.Logger.Error("Failed to load Simple Starvation Config");
             Mod.Logger.Error(e);
-            return new BodyWeightConfig();
+            return new SimpleStarvationConfig();
         }
     }
     
@@ -54,8 +54,8 @@ public class StarvationModSystem : ModSystem
         base.StartClientSide(api);
         
         _dialog = new BodyWeightGui(api);
-        api.Input.RegisterHotKey("BodyWeightGui", "Show Body Weight Stats", GlKeys.U, HotkeyType.GUIOrOtherControls);
-        api.Input.SetHotKeyHandler("BodyWeightGui", ToggleGui);
+        api.Input.RegisterHotKey("SimpleStarvationGui", "Show Body Weight Stats", GlKeys.U, HotkeyType.GUIOrOtherControls);
+        api.Input.SetHotKeyHandler("SimpleStarvationGui", ToggleGui);
     }
     
     private bool ToggleGui(KeyCombination comb)
