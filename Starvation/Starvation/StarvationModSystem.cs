@@ -18,12 +18,6 @@ public class StarvationModSystem : ModSystem
         get;
     }
 
-    public override void Start(ICoreAPI api)
-    {
-        base.Start(api);
-        Globals.CoreApiInstance = api;
-    }
-
     public override void StartServerSide(ICoreServerAPI api)
     {
         base.StartServerSide(api);
@@ -42,6 +36,7 @@ public class StarvationModSystem : ModSystem
         try
         {
             var config = api.LoadModConfig<BodyWeightConfig>("BodyWeightConfig.json") ?? new BodyWeightConfig();
+
             api.StoreModConfig(config, "BodyWeightConfig.json");
 
             return config;
@@ -53,11 +48,6 @@ public class StarvationModSystem : ModSystem
             return new BodyWeightConfig();
         }
     }
-    
-    // public override bool ShouldLoad(EnumAppSide forSide)
-    // {
-    //     return forSide == EnumAppSide.Client;
-    // }
     
     public override void StartClientSide(ICoreClientAPI api)
     {

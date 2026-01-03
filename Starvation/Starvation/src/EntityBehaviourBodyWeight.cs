@@ -1,7 +1,9 @@
 ﻿using Starvation.Config;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
 namespace Starvation;
@@ -15,7 +17,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     private static BodyWeightConfig Config => StarvationModSystem.Config ?? new BodyWeightConfig();
     private float WeightToSaturationScale =>  AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
     private float AmountOfSatToStarve => Config.ExpectedSaturationPerDay * entity.World.Calendar.DaysPerMonth * Config.NumberOfMonthsToStarve;
-
+    
     public override string PropertyName() => ENTITY_KEY;
     public const string ENTITY_KEY = "body-weight";
 
@@ -55,7 +57,6 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         if (_bodyWeightTree is null)
         {
             entity.WatchedAttributes.SetAttribute(PropertyName(), _bodyWeightTree = new TreeAttribute());
-           
             const float fullStomachSatOnSpawnIn = 1500f;
             StoredSaturation = GetSatForWeight(60) - fullStomachSatOnSpawnIn;
         }
@@ -80,6 +81,15 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         _hourAtLastTick = entity.World.Calendar.HourOfDay;
         _saturationLastTick = hungerBehaviour.Saturation;
         _hungerTick = 0f;
+
+        if (BodyWeight < Config.CriticalWeight)
+        {
+            entity.ReceiveDamage(new DamageSource
+            {
+                Source = EnumDamageSource.Internal,
+                Type = EnumDamageType.Hunger
+            }, 2.5f); //A quick painful death 
+        }
     }
 
     private void DigestFood(EntityBehaviorHunger hungerBehaviour)
@@ -89,22 +99,22 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             StoredSaturation += satDiff;
         }
-        Globals.CoreApiInstance?.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}");
+        //entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, satDiff: {satDiff}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}");
     }
 
     private void MetaboliseFoodStores()
     {
-        var calculatedHungerRate = entity.Stats.GetBlended("hungerrate");
+        var hungerRate = entity.Stats.GetBlended("hungerrate");
             
         var hoursPerDay = entity.World.Calendar.HoursPerDay;
-        var lossPerHour = Config.ExpectedSaturationPerDay / hoursPerDay * calculatedHungerRate;
+        var lossPerHour = Config.ExpectedSaturationPerDay / hoursPerDay * hungerRate * GlobalConstants.HungerSpeedModifier;
 
         var hourDiff = CalculateTimeSinceHungerLastChecked();
 
         StoredSaturation -= lossPerHour * hourDiff;
             
-        var currentHour = entity.World.Calendar.HourOfDay;
-        Globals.CoreApiInstance?.Logger.Debug($"Metabolising: currentHour: {currentHour}, hourLastTick: {_hourAtLastTick}, lossPerHour:{lossPerHour}, hourDIff {hourDiff}, loss: {lossPerHour * hourDiff}");
+        //var currentHour = entity.World.Calendar.HourOfDay;
+        //entity.World.Logger.Debug($"Metabolising: currentHour: {currentHour}, hourLastTick: {_hourAtLastTick}, lossPerHour:{lossPerHour}, hourDIff {hourDiff}, loss: {lossPerHour * hourDiff}");
     }
 
     private float CalculateTimeSinceHungerLastChecked()
@@ -118,6 +128,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         return currentHour - _hourAtLastTick;
     }
     
+    //Half current body-weight reserves when revived.
     public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)
     {
         if (damageSource is not { Type: EnumDamageType.Heal, Source: EnumDamageSource.Revive }) return;
@@ -132,6 +143,24 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         StoredSaturation = newSaturation;
     }
     
+    public void CheckForThrowUp()
+    {
+        var hunger = entity.GetBehavior<EntityBehaviorHunger>();
+        if (hunger is null) return;
+
+        if (hunger.Saturation < hunger.MaxSaturation + Config.ThrowUpThreshold) return;
+        
+        CreateThrowUpParticles();
+        
+        //Apply effect?
+        hunger.Saturation = 0f;
+        entity.ReceiveDamage(new DamageSource
+        {
+            Source = EnumDamageSource.Internal, 
+            Type = EnumDamageType.Hunger
+        }, 0.5f);
+    }
+    
     private void UpdateBodyWeight()
     {
         BodyWeight = Config.CriticalWeight + StoredSaturation / WeightToSaturationScale;
@@ -142,5 +171,35 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         var weightDiff = weightInKg - Config.CriticalWeight;
 
         return weightDiff * WeightToSaturationScale;
+    }
+
+    private void CreateThrowUpParticles()
+    {
+        var pos = entity.Pos.AheadCopy(0.4f).XYZ.Add(entity.LocalEyePos);
+        pos.Y -= 0.4f;
+            
+        var particleProps = new SimpleParticleProperties
+        {
+            MinQuantity = 20,
+            AddQuantity = 5,
+
+            MinPos = pos,
+            AddPos = new Vec3d(0.1f, 0.1f, 0.1f),
+
+            MinVelocity = new Vec3f(-0.2f, 0.7f, -0.2f),
+            AddVelocity = new Vec3f(-.5f, 1f, 0.5f),
+
+            LifeLength = 5f,
+            GravityEffect = .5f,
+
+            MinSize = 1f,
+            MaxSize = 1.5f,
+
+            ParticleModel = EnumParticleModel.Cube,
+            SelfPropelled = false,
+
+            Color = ColorUtil.ToRgba(255, 181, 230, 29)
+        };
+        entity.World.SpawnParticles(particleProps);
     }
 }
