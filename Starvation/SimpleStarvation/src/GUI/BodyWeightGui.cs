@@ -40,8 +40,8 @@ public class BodyWeightGui : GuiDialog
 
         var bgBounds = ElementBounds.Fill.FlatCopy();
 
-        var textElements = new List<TextElement>();
-        var yOffset = 50f;
+        var guiElements = new List<GuiElement>();
+        var yOffset = 45f;
         const float newLineOffset = 20f;
 
         const float column1Percentage = 0.65f;
@@ -50,10 +50,16 @@ public class BodyWeightGui : GuiDialog
         var columnOneWidth = (bounds.fixedWidth - GuiStyle.ElementToDialogPadding) * column1Percentage;
         var columnTwoWidth = (bounds.fixedWidth - GuiStyle.ElementToDialogPadding) * colum2Percentage;
         
-        textElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "weightLabel", "Weight"));
-        textElements.Add(new DynamicTextElement(ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, 100), "weightText", "0 kg"));
+        //Body Weight
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Nutrition", CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold)));
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Weight", CairoFont.WhiteDetailText(), true));
+        guiElements.Add(new DynamicTextElement(ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, 100), "weightText", "0 kg", CairoFont.WhiteDetailText()));
+        guiElements.Add(new Spacer());
+        
+        //Effects
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Physical", CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold), true));
 
-        foreach (var element in textElements)
+        foreach (var element in guiElements)
         {
             if (element.NewLine) yOffset += newLineOffset;
             
@@ -65,7 +71,7 @@ public class BodyWeightGui : GuiDialog
         SingleComposer = capi.Gui.CreateCompo("bodyweightdialog", dialogBounds)
             .AddShadedDialogBG(bgBounds)
             .AddDialogTitleBar("Body Weight", OnTitleBarCloseClicked)
-            .AddTextElements(textElements)
+            .AddSimpleStarvationGuiElements(guiElements)
             .Compose();
     }
 
@@ -87,38 +93,54 @@ public class BodyWeightGui : GuiDialog
     {
         TryClose();
     }
-    
-    internal abstract class TextElement(ElementBounds bounds, string text, bool newLine = false)
+
+    internal abstract class GuiElement(bool newLine) 
     {
-        public ElementBounds Bounds { get; } = bounds;
-        public string Text { get; } = text;
         public bool NewLine { get; } = newLine;
+        public virtual ElementBounds Bounds { get; } = ElementBounds.Empty;
 
         public abstract void AddElement(GuiComposer composer);
     }
 
-    private class DynamicTextElement(ElementBounds bounds, string key, string text, bool newLine = false) : TextElement(bounds, text, newLine)
+    private abstract class TextElement(ElementBounds bounds, string text, CairoFont font, bool newLine) : GuiElement(newLine)
+    {
+        public override ElementBounds Bounds { get; } = bounds;
+        public string Text { get; } = text;
+        public CairoFont Font { get; } = font;
+        
+        public abstract override void AddElement(GuiComposer composer);
+    }
+
+    private class DynamicTextElement(ElementBounds bounds, string key, string text, CairoFont font, bool newLine = false) : TextElement(bounds, text, font, newLine)
     {
         public string Key { get; } = key;
 
         public override void AddElement(GuiComposer composer)
         {
-            composer.AddDynamicText(Text, CairoFont.WhiteDetailText(), Bounds, Key);
+            composer.AddDynamicText(Text, Font, Bounds, Key);
         }
     }
 
-    private class StaticTextElement(ElementBounds bounds, string key, string text, bool newLine = false) : TextElement(bounds, text, newLine)
+    private class StaticTextElement(ElementBounds bounds, string text, CairoFont font, bool newLine = false) : TextElement(bounds, text, font, newLine)
     {
         public override void AddElement(GuiComposer composer)
         {
-            composer.AddStaticText(Text, CairoFont.WhiteDetailText(), Bounds);
+            composer.AddStaticText(Text, Font, Bounds);
+        }
+    }
+
+    private class Spacer() : GuiElement(true)
+    {
+        public override void AddElement(GuiComposer composer)
+        {
+            //Don't bother adding
         }
     }
 }
 
 internal static class ComposerExtension
 {
-    public static GuiComposer AddTextElements(this GuiComposer composer, IEnumerable<BodyWeightGui.TextElement> elements)
+    public static GuiComposer AddSimpleStarvationGuiElements(this GuiComposer composer, IEnumerable<BodyWeightGui.GuiElement> elements)
     {
         foreach (var element in elements) element.AddElement(composer);
         return composer;
