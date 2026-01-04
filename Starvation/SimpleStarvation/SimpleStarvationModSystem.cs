@@ -30,6 +30,30 @@ public class SimpleStarvationModSystem : ModSystem
             _patcher.PatchCategory(Mod.Info.ModID);
         }
         Config = LoadModConfig(api);
+        CreateCommands(api);
+    }
+
+    private static void CreateCommands(ICoreServerAPI api)
+    {
+        var commandsHandler = new ServerCommandHandlers(api);
+        
+        api.ChatCommands
+            .Create("bodyweight")
+            .RequiresPrivilege(Privilege.root)
+            .RequiresPlayer()
+            .WithDescription("Commands for Simple Starvation. Type /help for available commands.")
+
+            .BeginSubCommand("set")
+            .HandleWith(commandsHandler.SetWeightHandler)
+            .WithDescription("Sets your body weight")
+            .WithArgs(api.ChatCommands.Parsers.Float("weight"))
+            .EndSubCommand()
+        
+            .BeginSubCommand("playerset")
+            .HandleWith(commandsHandler.SetPlayerWeightHandler)
+            .WithDescription("Sets the players body weight")
+            .WithArgs(api.ChatCommands.Parsers.Word("player"), api.ChatCommands.Parsers.Float("weight"))
+            .EndSubCommand();
     }
 
     private SimpleStarvationConfig LoadModConfig(ICoreAPICommon api)

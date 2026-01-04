@@ -15,6 +15,11 @@ public class SimpleStarvationConfig
     [JsonInclude] public float CriticalWeight { get;  init; } = 40f;
     
     /// <summary>
+    /// Let's not get too large and in charge now
+    /// </summary>
+    [JsonInclude] public float MaxWeight { get;  init; } = 100f;
+    
+    /// <summary>
     /// Roughly how much saturation you'd expect a player to eat in a day to maintain weight
     /// </summary>
     [JsonInclude] public float ExpectedSaturationPerDay { get;  init; } = 4000f;
