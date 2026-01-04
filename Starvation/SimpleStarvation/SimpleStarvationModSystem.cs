@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using HarmonyLib;
 using Starvation.Config;
+using Starvation.GUI;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -10,7 +12,6 @@ namespace Starvation;
 public class SimpleStarvationModSystem : ModSystem
 {
     private Harmony? _patcher;
-    private GuiDialog? _dialog;
 
     public static SimpleStarvationConfig? Config
     {
@@ -52,21 +53,19 @@ public class SimpleStarvationModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         base.StartClientSide(api);
-        
-        _dialog = new BodyWeightGui(api);
-        api.Input.RegisterHotKey("SimpleStarvationGui", "Show Body Weight Stats", GlKeys.U, HotkeyType.GUIOrOtherControls);
-        api.Input.SetHotKeyHandler("SimpleStarvationGui", ToggleGui);
-    }
-    
-    private bool ToggleGui(KeyCombination comb)
-    {
-        if (_dialog is null) return true;
-        
-        if (_dialog.IsOpened())
-            _dialog.TryClose();
-        else _dialog.TryOpen();
 
-        return true;
+        if(api.Gui.LoadedGuis.FirstOrDefault(x => x is GuiDialogCharacterBase) is not GuiDialogCharacterBase statsDialog) return;
+        
+        statsDialog.ComposeExtraGuis += () =>
+        {
+            var composer = statsDialog.Composers["playerstats"];
+            if (composer is null) return;
+            
+            var dialog = new BodyWeightGui(api, composer.Bounds);
+                    
+            statsDialog.OnOpened += () => dialog.TryOpen();
+            statsDialog.OnClosed += () => dialog.TryClose();
+        };
     }
     
     public override void Dispose()
