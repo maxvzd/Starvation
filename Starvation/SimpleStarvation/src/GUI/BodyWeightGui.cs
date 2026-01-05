@@ -78,7 +78,7 @@ public class BodyWeightGui : GuiDialog
     private void UpdateWeightText()
     {
         var watchedAttributes = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
-        var weight = watchedAttributes.GetFloat("weight");
+        var weight = watchedAttributes?.GetFloat("weight");
         
         SetDynamicText("weightText", $"{weight:0.0} kg");
     }
