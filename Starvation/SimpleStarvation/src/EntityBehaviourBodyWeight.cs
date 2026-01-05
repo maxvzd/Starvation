@@ -59,8 +59,11 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         if (_bodyWeightTree is null)
         {
             entity.WatchedAttributes.SetAttribute(PropertyName(), _bodyWeightTree = new TreeAttribute());
-            const float fullStomachSatOnSpawnIn = 1500f;
-            StoredSaturation = GetSatForWeight(60) - fullStomachSatOnSpawnIn;
+
+            var startingWeight = Math.Max(Config.CriticalWeight, Config.PlayerStartingWeight);
+            startingWeight = Math.Min(Config.MaxWeight, startingWeight);
+            
+            StoredSaturation = GetSatForWeight(startingWeight);
         }
     }
 
@@ -139,17 +142,21 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         return currentHour - _hourAtLastTick;
     }
     
-    //Half current body-weight reserves when revived.
     public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)
     {
         if (damageSource is not { Type: EnumDamageType.Heal, Source: EnumDamageSource.Revive }) return;
+        if (StoredSaturation is null) return;
+
+        var percentageLost = Math.Max(0, Config.WeightLossOnDeath / 100);
+        percentageLost = Math.Min(1, percentageLost);
+
+        var minWeightOnRespawn = Math.Max(Config.CriticalWeight, Config.LowestPossibleWeightOnRespawn);
+        minWeightOnRespawn = Math.Min(Config.MaxWeight, minWeightOnRespawn);
         
-        var newSaturation = StoredSaturation / 2;
-        var satAt50Kg = GetSatForWeight(50);
-        if (newSaturation < satAt50Kg)
-        {
-            newSaturation = satAt50Kg;
-        }
+        var newSaturation = (float)StoredSaturation * percentageLost;
+        var satAtLowestWeightPossible = GetSatForWeight(minWeightOnRespawn);
+
+        newSaturation = Math.Max(satAtLowestWeightPossible, newSaturation);
             
         StoredSaturation = newSaturation;
     }

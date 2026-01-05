@@ -33,12 +33,25 @@ public class SimpleStarvationConfig
     /// <summary>
     /// How many calories you can eat while full before you throw up
     /// </summary>
-    [JsonInclude] public float ThrowUpThreshold { get; init; } = 250;
+    [JsonInclude] public float ThrowUpThreshold { get; init; } = 250f;
     
     /// <summary>
     /// Whether or not to apply the bonuses to weight
     /// </summary>
     [JsonInclude] public bool ApplyWeightBonuses { get; init; } = true;
+
+    /// <summary>
+    /// The percentage of weight to lose on death 
+    /// </summary>
+    [JsonInclude] public float WeightLossOnDeath { get; init; } = 50f;
+
+    /// <summary>
+    /// The lowest weight a player can be when they respawn
+    /// </summary>
+    [JsonInclude] public float LowestPossibleWeightOnRespawn { get; init; } = 50f;
     
-    
+    /// <summary>
+    /// The weight a player when they first spawn in
+    /// </summary>
+    [JsonInclude] public float PlayerStartingWeight { get; init; } = 60;
 }
