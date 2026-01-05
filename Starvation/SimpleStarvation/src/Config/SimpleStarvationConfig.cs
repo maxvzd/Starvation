@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Starvation.Config;
 
@@ -54,4 +56,19 @@ public class SimpleStarvationConfig
     /// The weight a player when they first spawn in
     /// </summary>
     [JsonInclude] public float PlayerStartingWeight { get; init; } = 60;
+    
+    /// <summary>
+    /// Bonuses to apply at the given weight values
+    /// </summary>
+    [JsonInclude] public IReadOnlyList<WeightBonus> WeightBonuses = new List<WeightBonus>
+    {
+        new(40, new Bonus(-0.5f, -0.2f, -5f, -0.3f, -0.3f)), 
+        new(50, new Bonus(-0.3f, -0.15f, -3f, -0.2f, -0.2f)), 
+        new(60, new Bonus(-0.1f, -0.05f, -2f, -0.1f, -0.1f)), 
+        new(70, new Bonus(.1f, .05f, 0f, 0.05f, 0.05f)),
+        new(80, new Bonus(.25f, .1f, 3f, 0.1f, 0.1f)),
+        new(90, new Bonus(-0.1f, 0f, 2f, 0.05f, 0f)),
+        new(100, new Bonus(-0.15f, 0f, 1f, 0.05f, 0f)) // Damn boi he thicc
+    };
+
 }
