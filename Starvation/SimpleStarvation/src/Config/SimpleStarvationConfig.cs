@@ -34,4 +34,11 @@ public class SimpleStarvationConfig
     /// How many calories you can eat while full before you throw up
     /// </summary>
     [JsonInclude] public float ThrowUpThreshold { get; init; } = 250;
+    
+    /// <summary>
+    /// Whether or not to apply the bonuses to weight
+    /// </summary>
+    [JsonInclude] public bool ApplyWeightBonuses { get; init; } = true;
+    
+    
 }

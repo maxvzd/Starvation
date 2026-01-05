@@ -22,7 +22,8 @@ public class SimpleStarvationModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         base.StartServerSide(api);
-        api.RegisterEntityBehaviorClass(EntityBehaviourBodyWeight.ENTITY_KEY, typeof(EntityBehaviourBodyWeight));
+        api.RegisterEntityBehaviorClass(EntityBehaviourBodyWeight.BEHAVIOUR_KEY, typeof(EntityBehaviourBodyWeight));
+        api.RegisterEntityBehaviorClass(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY, typeof(EntityBehaviourWeightBonuses));
         
         if (!Harmony.HasAnyPatches(Mod.Info.ModID))
         {
@@ -31,6 +32,13 @@ public class SimpleStarvationModSystem : ModSystem
         }
         Config = LoadModConfig(api);
         CreateCommands(api);
+        
+        //Make sure we update the weight bonuses on a player when they switch gamemode so there's no 10sec gap and creative gets updated
+        api.Event.PlayerSwitchGameMode += player =>
+        {
+            var weightBonusesBehaviour = player.Entity.GetBehavior<EntityBehaviourWeightBonuses>();
+            weightBonusesBehaviour?.SetWeightBonuses();
+        };
     }
 
     private static void CreateCommands(ICoreServerAPI api)

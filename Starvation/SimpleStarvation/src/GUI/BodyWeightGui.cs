@@ -19,7 +19,7 @@ public class BodyWeightGui : GuiDialog
         
         UpdateWeightText();
         var watchedAttributes = capi.World.Player.Entity.WatchedAttributes;
-        watchedAttributes.RegisterModifiedListener(EntityBehaviourBodyWeight.ENTITY_KEY, UpdateWeightText);
+        watchedAttributes.RegisterModifiedListener(EntityBehaviourBodyWeight.BEHAVIOUR_KEY, UpdateWeightText);
     }
 
     public override void OnGuiClosed()
@@ -77,7 +77,7 @@ public class BodyWeightGui : GuiDialog
 
     private void UpdateWeightText()
     {
-        var watchedAttributes = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.ENTITY_KEY);
+        var watchedAttributes = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
         var weight = watchedAttributes.GetFloat("weight");
         
         SetDynamicText("weightText", $"{weight:0.0} kg");
