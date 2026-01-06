@@ -109,6 +109,7 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
                 _weightBonusTree.SetFloat(BonusTypeToKey.GetKey(bonus.Type), bonus.Value);
             }
         }
+        entity.WatchedAttributes.MarkPathDirty(PropertyName());
     }
 
     private void ClearBonuses()

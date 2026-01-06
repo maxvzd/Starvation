@@ -40,8 +40,6 @@ public enum BonusType
     OreDropRate,
     ArmorWalkSpeed,
     ArmorDurabilityLoss,
-
-
 }
 
 public static class BonusTypeToKey
