@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using Starvation.Config;
@@ -13,7 +14,7 @@ public class SimpleStarvationModSystem : ModSystem
 {
     private Harmony? _patcher;
 
-    public static SimpleStarvationConfig? Config { private set; get; }
+    public static SimplyStarvingConfig? Config { private set; get; }
 
     public override void StartServerSide(ICoreServerAPI api)
     {
@@ -69,12 +70,12 @@ public class SimpleStarvationModSystem : ModSystem
             .EndSubCommand();
     }
 
-    private SimpleStarvationConfig LoadModConfig(ICoreAPICommon api)
+    private SimplyStarvingConfig LoadModConfig(ICoreAPICommon api)
     {
         try
         {
-            var config = api.LoadModConfig<SimpleStarvationConfig>("SimpleStarvation.json") ?? new SimpleStarvationConfig();
-
+            var mutableConfig = api.LoadModConfig<MutableConfig>("SimpleStarvation.json") ?? new MutableConfig();
+            var config = mutableConfig.Freeze();
             api.StoreModConfig(config, "SimpleStarvation.json");
 
             return config;
@@ -83,7 +84,7 @@ public class SimpleStarvationModSystem : ModSystem
         {
             Mod.Logger.Error("Failed to load Simple Starvation Config");
             Mod.Logger.Error(e);
-            return new SimpleStarvationConfig();
+            return new MutableConfig().Freeze();
         }
     }
 

@@ -16,7 +16,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     private float _hungerTick = 0f;
     private ITreeAttribute? _bodyWeightTree;
     
-    private static SimpleStarvationConfig Config => SimpleStarvationModSystem.Config ?? new SimpleStarvationConfig();
+    private static SimplyStarvingConfig Config => SimpleStarvationModSystem.Config ?? new MutableConfig().Freeze();
     private float WeightToSaturationScale =>  AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
     private float AmountOfSatToStarve => Config.ExpectedSaturationPerDay * entity.World.Calendar.DaysPerMonth * Config.NumberOfMonthsToStarve;
     
@@ -74,7 +74,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         
         if (_hungerTick < 10) return;
 
-        if (!PlayerHelper.IsPlayerInSurvival(entity)) return;
+        if (!PlayerHelper.IsPlayerInCreative(entity)) return;
         
         var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
         if (hungerBehaviour is null) return;
@@ -186,6 +186,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         entity.GetBehavior<EntityBehaviourWeightBonuses>()?.SetWeightBonuses();
 
     }
+    
     private float GetSatForWeight(float weightInKg)
     {
         var weightDiff = weightInKg - Config.CriticalWeight;

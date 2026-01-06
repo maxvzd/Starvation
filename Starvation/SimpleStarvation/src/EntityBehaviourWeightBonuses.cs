@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Starvation.Config;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
@@ -11,69 +12,95 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
     public override string PropertyName() => BEHAVIOUR_KEY;
     public const string BEHAVIOUR_KEY = "weight-bonuses";
     
-    private static SimpleStarvationConfig Config => SimpleStarvationModSystem.Config ?? new SimpleStarvationConfig();
-    private IReadOnlyList<WeightBonus> WeightBonuses => Config.WeightBonuses;
-    
+    private static SimplyStarvingConfig Config => SimpleStarvationModSystem.Config ?? new MutableConfig().Freeze();
+    private IReadOnlyList<Bonus>? WeightBonuses => Config.WeightBonuses;
+    private IReadOnlyList<IGrouping<BonusType, Bonus>>? _distinctBonusTypes = null;
+
+    public override void OnEntitySpawn()
+    {
+        base.OnEntitySpawn();
+        if (WeightBonuses is null) return;
+        _distinctBonusTypes = WeightBonuses.GroupBy(x => x.Type).ToList();
+        SetWeightBonuses();
+    }
+
     public void SetWeightBonuses()
     {
-        if (!PlayerHelper.IsPlayerInSurvival(entity) || !Config.ApplyWeightBonuses)
+        var currentBodyWeightNullable  = entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY)?.GetFloat("weight");
+        
+        if (PlayerHelper.IsPlayerInCreative(entity) || !Config.ApplyWeightBonuses || currentBodyWeightNullable is not { } currentBodyWeight)
         {
-            SetBonuses(new Bonus(0, 0, 0, 0, 0));
+            ClearBonuses();
             return;
         }
 
-        var bodyWeight = entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY).GetFloat("weight");
+        if (_distinctBonusTypes is null || !_distinctBonusTypes.Any()) return;
         
-        var difference = float.MaxValue;
-        var closestIndex = 0;
-        
-        for (var i = 0; i < WeightBonuses.Count; i++)
+        var bonusesToSet = new List<Bonus>();
+        foreach (var bonusType in _distinctBonusTypes)
         {
-            var bonusWeight = WeightBonuses[i].Weight;
+            var orderedBonuses = bonusType.OrderBy(x => x.Weight).ToList();
+            if (orderedBonuses.Count == 0) continue;
             
-            var currentDifference = Math.Abs(bodyWeight - bonusWeight);
-            if (currentDifference > difference) continue;
-            
-            closestIndex = i;
-            difference = currentDifference;
+            bonusesToSet.Add(GetBonusForWeight(orderedBonuses, currentBodyWeight));
         }
-        
-        var closestWeightBonus = WeightBonuses[closestIndex];
-        var closestBonus = closestWeightBonus.Bonus;
-        if (Math.Abs(closestWeightBonus.Weight - bodyWeight) < 0.01f || closestIndex == 0 || closestIndex == WeightBonuses.Count - 1) //If bonusweight is exactly bodyweight then just set bonus
-        {
-        }
-        else if (closestWeightBonus.Weight > bodyWeight)
-        {
-            closestBonus = LerpBetweenWeightBonus( WeightBonuses[closestIndex - 1], WeightBonuses[closestIndex], bodyWeight);
-        }
-        else if (closestWeightBonus.Weight < bodyWeight)
-        {
-            closestBonus = LerpBetweenWeightBonus( WeightBonuses[closestIndex], WeightBonuses[closestIndex + 1], bodyWeight);
-        }
-
-        SetBonuses(closestBonus);
+        SetBonuses(bonusesToSet);
     }
 
-    private Bonus LerpBetweenWeightBonus(WeightBonus below, WeightBonus above, float bodyWeight)
+    private static Bonus GetBonusForWeight(IReadOnlyList<Bonus> orderedBonuses, float currentBodyWeight)
     {
-        var lerpFactor = (bodyWeight - below.Weight) / (above.Weight - below.Weight);
+        if (currentBodyWeight < orderedBonuses[0].Weight)
+        {
+            var bonusAbove = orderedBonuses[0];
+            var bonusBelow = new Bonus(bonusAbove.Type, 0, Config.CriticalWeight);
+            return LerpBonus(bonusBelow, bonusAbove, currentBodyWeight);
+        }
+        
+        var bonusAtLastIndex = orderedBonuses[^1];
+        if (currentBodyWeight > bonusAtLastIndex.Weight)
+        {
+            return new Bonus(bonusAtLastIndex.Type, bonusAtLastIndex.Value, currentBodyWeight);
+        }
 
-        var walkSpeed = GameMath.Lerp(below.Bonus.WalkSpeed, above.Bonus.WalkSpeed, lerpFactor);
-        var miningSpeed = GameMath.Lerp(below.Bonus.MiningSpeed, above.Bonus.MiningSpeed, lerpFactor);
-        var meleeDamage = GameMath.Lerp(below.Bonus.MeleeDamage, above.Bonus.MeleeDamage, lerpFactor);
-        var rangeDamage = GameMath.Lerp(below.Bonus.RangedDamage, above.Bonus.RangedDamage, lerpFactor);
-        var maxHealth = GameMath.Lerp(below.Bonus.MaxHealth, above.Bonus.MaxHealth, lerpFactor);
-
-        return new Bonus(walkSpeed, miningSpeed, maxHealth, meleeDamage, rangeDamage);
+        for (var i = 1; i < orderedBonuses.Count; i++)
+        {
+            var bonus = orderedBonuses[i];
+            if (currentBodyWeight < bonus.Weight)
+            {
+                return LerpBonus(orderedBonuses[i - 1], bonus, currentBodyWeight);
+            }
+        }
+        
+        //Shouldn't ever happen but just incase
+        return bonusAtLastIndex;
+    }
+    
+    private static Bonus LerpBonus(Bonus below, Bonus above, float currentBodyWeight)
+    {
+        if (Math.Abs(below.Weight - above.Weight) < 0.001f) return below;
+        
+        var lerpFactor = (currentBodyWeight - below.Weight) / (above.Weight - below.Weight);
+        lerpFactor = GameMath.Clamp(lerpFactor, 0, 1);
+        
+        var value = GameMath.Lerp(below.Value, above.Value, lerpFactor);
+        return new Bonus(below.Type, value, currentBodyWeight);
+    }
+    
+    private void SetBonuses(IEnumerable<Bonus> bonuses)
+    {
+        foreach (var bonus in bonuses)
+        {
+            var key = BonusTypeToKey.GetKey(bonus.Type);
+            if (!string.IsNullOrEmpty(key)) 
+                entity.Stats.Set(key, "SimpleStarvation", bonus.Value);
+        }
     }
 
-    private void SetBonuses(Bonus bonus)
+    private void ClearBonuses()
     {
-        entity.Stats.Set("walkspeed", "SimpleStarvation", bonus.WalkSpeed);
-        entity.Stats.Set("maxhealthExtraPoints", "SimpleStarvation", bonus.MaxHealth);
-        entity.Stats.Set("meleeWeaponsDamage", "SimpleStarvation", bonus.MeleeDamage);
-        entity.Stats.Set("rangedWeaponsDamage", "SimpleStarvation", bonus.RangedDamage);
-        entity.Stats.Set("miningSpeedMul", "SimpleStarvation", bonus.MiningSpeed);
+        foreach (var stat in entity.Stats)
+        {
+            entity.Stats.Remove(stat.Key, "SimpleStarvation");
+        }
     }
 }
