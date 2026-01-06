@@ -118,7 +118,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 
     private void MetaboliseFoodStores()
     {
-        var hungerRate = entity.Stats.GetBlended("hungerrate");
+        var hungerRate = entity.Stats.GetBlended(BonusTypeToKey.GetKey(BonusType.HungerRate));
         
         var hoursPerDay = entity.World.Calendar.HoursPerDay;
         var lossPerHour = Config.ExpectedSaturationPerDay / hoursPerDay * hungerRate * GlobalConstants.HungerSpeedModifier;
