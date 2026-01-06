@@ -74,7 +74,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         
         if (_hungerTick < 10) return;
 
-        if (!PlayerHelper.IsPlayerInCreative(entity)) return;
+        if (PlayerHelper.IsPlayerInCreative(entity)) return;
         
         var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
         if (hungerBehaviour is null) return;

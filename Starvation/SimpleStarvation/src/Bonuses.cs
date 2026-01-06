@@ -11,6 +11,7 @@ public readonly struct Bonus(BonusType type, float value, float weight)
 
 public enum BonusType
 {
+    //Likely to use
     WalkSpeed,
     MiningSpeed,
     MaxHealth,
@@ -20,23 +21,27 @@ public enum BonusType
     HungerRate,
     RangeWeaponAccuracy,
     RangedWeaponsSpeed,
+    RustyGearDropRate,
+    AnimalSeekingRange,
+    BowDrawStrength,
+    GliderLiftMax,
+    GliderSpeedMax,
+    JumpHeightMul,
+    
+    //Not Likely to use
+    WholeVesselLootChance,
+    TemporalGearRepairCost,
+    AnimalHarvestTime,
     MechanicalsDamage,
     AnimalLootDropRate,
     ForageDropRate,
     WildCropDropRate,
     VesselContentsDropRate,
     OreDropRate,
-    RustyGearDropRate,
-    AnimalSeekingRange,
-    ArmorDurabilityLoss,
     ArmorWalkSpeed,
-    BowDrawStrength,
-    WholeVesselLootChance,
-    TemporalGearRepairCost,
-    AnimalHarvestTime,
-    GliderLiftMax,
-    GliderSpeedMax,
-    JumpHeightMul
+    ArmorDurabilityLoss,
+
+
 }
 
 public static class BonusTypeToKey
