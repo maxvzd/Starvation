@@ -1,16 +1,41 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 
 namespace Starvation.GUI;
 
 public class BodyWeightGui : GuiDialog
 {
+    private readonly ITreeAttribute _bodyWeightTree;
+    private readonly ITreeAttribute _weightBonusTree;
     public override string ToggleKeyCombinationCode => "BodyWeightGui";
+    private IReadOnlyList<LabelViewModel> _statsToWatch;
     
     public BodyWeightGui(ICoreClientAPI coreApi, ElementBounds bounds) : base(coreApi)
     {
+        _statsToWatch = new List<LabelViewModel>
+        {
+            new("Walk Speed", BonusType.WalkSpeed),
+            new("Mining Speed", BonusType.MiningSpeed),
+            new MaxHealthViewModel("Max Health", BonusType.MaxHealth),
+            new("Melee Damage", BonusType.MeleeDamage),
+            new("Ranged Damage", BonusType.RangedDamage),
+            new("Ranged Accuracy", BonusType.RangeWeaponAccuracy),
+            new("Projectile Speed", BonusType.RangedWeaponsSpeed),
+            new("Luck", BonusType.RustyGearDropRate),
+            new("Tastiness", BonusType.AnimalSeekingRange),
+            new("Bow Draw Strength", BonusType.BowDrawStrength),
+            new("Glider Lift", BonusType.GliderLiftMax),
+            new("Glider Speed", BonusType.GliderSpeedMax),
+        };
+        
+        
         SetupDialog(bounds);
+        
+        _bodyWeightTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
+        _weightBonusTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY);
     }
     
     public override void OnGuiOpened()
@@ -20,6 +45,7 @@ public class BodyWeightGui : GuiDialog
         UpdateWeightText();
         var watchedAttributes = capi.World.Player.Entity.WatchedAttributes;
         watchedAttributes.RegisterModifiedListener(EntityBehaviourBodyWeight.BEHAVIOUR_KEY, UpdateWeightText);
+        watchedAttributes.RegisterModifiedListener(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY, UpdateWeightText);
     }
 
     public override void OnGuiClosed()
@@ -57,15 +83,14 @@ public class BodyWeightGui : GuiDialog
         guiElements.Add(new Spacer());
         
         //Effects
-        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Physical", CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold), true));
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Bonuses", CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold), true));
+        guiElements.AddRange(_statsToWatch.Select(viewModel => viewModel.ConstructGui(columnOneWidth, columnTwoWidth)));
 
         foreach (var element in guiElements)
         {
             if (element.NewLine) yOffset += newLineOffset;
             
-            element.Bounds
-                .WithParent(bgBounds)
-                .WithFixedAlignmentOffset(GuiStyle.ElementToDialogPadding, yOffset);
+            element.SetParent(bgBounds, GuiStyle.ElementToDialogPadding, yOffset);
         }
 
         SingleComposer = capi.Gui.CreateCompo("bodyweightdialog", dialogBounds)
@@ -77,10 +102,13 @@ public class BodyWeightGui : GuiDialog
 
     private void UpdateWeightText()
     {
-        var watchedAttributes = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
-        var weight = watchedAttributes?.GetFloat("weight");
-        
+        var weight = _bodyWeightTree.GetFloat("weight");
         SetDynamicText("weightText", $"{weight:0.0} kg");
+
+        foreach (var viewModel in _statsToWatch)
+        {
+            SetDynamicText(viewModel.Key, viewModel.GetValue(_weightBonusTree));
+        }
     }
 
     private void SetDynamicText(string key, string text)
@@ -100,6 +128,12 @@ public class BodyWeightGui : GuiDialog
         public virtual ElementBounds Bounds { get; } = ElementBounds.Empty;
 
         public abstract void AddElement(GuiComposer composer);
+        public virtual void SetParent(ElementBounds parent, double x, double y)
+        {
+            Bounds
+                .WithParent(parent)
+                .WithFixedAlignmentOffset(x, y);
+        }
     }
 
     private abstract class TextElement(ElementBounds bounds, string text, CairoFont font, bool newLine) : GuiElement(newLine)
@@ -134,6 +168,68 @@ public class BodyWeightGui : GuiDialog
         public override void AddElement(GuiComposer composer)
         {
             //Don't bother adding
+        }
+    }
+
+    private class LabelElement : GuiElement
+    {
+        private readonly StaticTextElement _label;
+        private readonly DynamicTextElement _value;
+
+        public LabelElement(double columnOneWidth, double columnTwoWidth, string name, string key) : base(true)
+        {
+            var labelBounds = ElementBounds.Fixed(0, 0, columnOneWidth, 100);
+            var valueBounds = ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, labelBounds.fixedHeight);
+            
+            _label = new StaticTextElement(labelBounds, name, CairoFont.WhiteDetailText(), true);
+            _value = new DynamicTextElement(valueBounds, key, "", CairoFont.WhiteDetailText());
+        }
+
+        public override void AddElement(GuiComposer composer)
+        {
+            _label.AddElement(composer);
+            _value.AddElement(composer);
+        }
+
+        public override void SetParent(ElementBounds parent, double x, double y)
+        {
+            _value.Bounds
+                .WithParent(_label.Bounds);
+            
+            _label.Bounds
+                .WithParent(parent)
+                .WithFixedAlignmentOffset(x, y);
+        }
+    }
+
+    private class LabelViewModel(string title, BonusType type)
+    {
+        public string Key => $"{title.Replace(" ", "")}-key";
+        
+        public virtual string GetValue(ITreeAttribute bonusTree)
+        {
+            var value = bonusTree.GetFloat(BonusTypeToKey.GetKey(type));
+            return $"{value * 100:0}%";
+        }
+
+        public LabelElement ConstructGui(double columnOneWidth, double columnTwoWidth)
+        {
+            return new LabelElement(columnOneWidth, columnTwoWidth,title, Key);
+        }
+    }
+
+    private class MaxHealthViewModel(string title, BonusType type) : LabelViewModel(title, type)
+    {
+        public override string GetValue(ITreeAttribute bonusTree)
+        {
+            var value = bonusTree.GetFloat(BonusTypeToKey.GetKey(type));
+            var prefix = string.Empty;
+            if (value > 0)
+            {
+                prefix = "+";
+            }
+            
+            return $"{prefix}{value}";
         }
     }
 }

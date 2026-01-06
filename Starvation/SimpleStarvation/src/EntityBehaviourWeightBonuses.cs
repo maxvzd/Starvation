@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Starvation.Config;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
 namespace Starvation;
@@ -15,6 +16,7 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
     private static SimplyStarvingConfig Config => SimpleStarvationModSystem.Config ?? new MutableConfig().Freeze();
     private IReadOnlyList<Bonus>? WeightBonuses => Config.WeightBonuses;
     private IReadOnlyList<IGrouping<BonusType, Bonus>>? _distinctBonusTypes = null;
+    private ITreeAttribute _weightBonusTree;
 
     public override void OnEntitySpawn()
     {
@@ -22,6 +24,16 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
         if (WeightBonuses is null) return;
         _distinctBonusTypes = WeightBonuses.GroupBy(x => x.Type).ToList();
         SetWeightBonuses();
+    }
+
+    public override void Initialize(EntityProperties properties, JsonObject attributes)
+    {
+        base.Initialize(properties, attributes);
+        _weightBonusTree = entity.WatchedAttributes.GetTreeAttribute(PropertyName());
+        if (_weightBonusTree is null)
+        {
+            entity.WatchedAttributes.SetAttribute(PropertyName(), _weightBonusTree = new TreeAttribute());
+        }
     }
 
     public void SetWeightBonuses()
@@ -91,8 +103,11 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
         foreach (var bonus in bonuses)
         {
             var key = BonusTypeToKey.GetKey(bonus.Type);
-            if (!string.IsNullOrEmpty(key)) 
+            if (!string.IsNullOrEmpty(key))
+            {
                 entity.Stats.Set(key, "SimpleStarvation", bonus.Value);
+                _weightBonusTree.SetFloat(BonusTypeToKey.GetKey(bonus.Type), bonus.Value);
+            }
         }
     }
 
