@@ -146,14 +146,15 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     {
         if (damageSource is not { Type: EnumDamageType.Heal, Source: EnumDamageSource.Revive }) return;
         if (StoredSaturation is null) return;
+        if (BodyWeight is not { } currentBodyWeight) return;
 
         var percentageLost = Math.Max(0, Config.WeightLossOnDeath / 100);
-        percentageLost = Math.Min(1, percentageLost);
+        percentageLost = Math.Clamp(percentageLost, 0, 1);
 
-        var minWeightOnRespawn = Math.Max(Config.CriticalWeight, Config.LowestPossibleWeightOnRespawn);
-        minWeightOnRespawn = Math.Min(Config.MaxWeight, minWeightOnRespawn);
+        var minWeightOnRespawn = Math.Clamp(Config.LowestPossibleWeightOnRespawn, Config.CriticalWeight, Config.MaxWeight);
         
-        var newSaturation = (float)StoredSaturation * percentageLost;
+        //var newSaturation = (float)StoredSaturation * percentageLost;
+        var newSaturation = GetSatForWeight(currentBodyWeight - (currentBodyWeight * percentageLost));
         var satAtLowestWeightPossible = GetSatForWeight(minWeightOnRespawn);
 
         newSaturation = Math.Max(satAtLowestWeightPossible, newSaturation);
