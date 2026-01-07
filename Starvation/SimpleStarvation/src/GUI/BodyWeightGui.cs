@@ -11,24 +11,24 @@ public class BodyWeightGui : GuiDialog
     private readonly ITreeAttribute _bodyWeightTree;
     private readonly ITreeAttribute _weightBonusTree;
     public override string ToggleKeyCombinationCode => "BodyWeightGui";
-    private IReadOnlyList<LabelViewModel> _statsToWatch;
+    private readonly IReadOnlyList<LabelViewModel> _statsToWatch;
     
     public BodyWeightGui(ICoreClientAPI coreApi, ElementBounds bounds) : base(coreApi)
     {
         _statsToWatch = new List<LabelViewModel>
         {
-            new("Walk Speed", BonusType.WalkSpeed),
-            new("Mining Speed", BonusType.MiningSpeed),
-            new MaxHealthViewModel("Max Health", BonusType.MaxHealth),
-            new("Melee Damage", BonusType.MeleeDamage),
-            new("Ranged Damage", BonusType.RangedDamage),
-            new("Ranged Accuracy", BonusType.RangeWeaponAccuracy),
-            new("Projectile Speed", BonusType.RangedWeaponsSpeed),
-            new("Luck", BonusType.RustyGearDropRate),
-            new("Tastiness", BonusType.AnimalSeekingRange),
-            new("Bow Draw Strength", BonusType.BowDrawStrength),
-            new("Glider Lift", BonusType.GliderLiftMax),
-            new("Glider Speed", BonusType.GliderSpeedMax),
+            new(BonusType.WalkSpeed),
+            new(BonusType.MiningSpeed),
+            new MaxHealthViewModel(BonusType.MaxHealth),
+            new(BonusType.MeleeDamage),
+            new(BonusType.RangedDamage),
+            new(BonusType.RangeWeaponAccuracy),
+            new(BonusType.RangedWeaponsSpeed),
+            new(BonusType.RustyGearDropRate),
+            new(BonusType.AnimalSeekingRange),
+            new(BonusType.BowDrawStrength),
+            new(BonusType.GliderLiftMax),
+            new(BonusType.GliderSpeedMax),
         };
         
         
@@ -77,13 +77,13 @@ public class BodyWeightGui : GuiDialog
         var columnTwoWidth = (bounds.fixedWidth - GuiStyle.ElementToDialogPadding) * colum2Percentage;
         
         //Body Weight
-        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Nutrition", CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold)));
-        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Weight", CairoFont.WhiteDetailText(), true));
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:Nutrition"), CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold)));
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:Weight"), CairoFont.WhiteDetailText(), true));
         guiElements.Add(new DynamicTextElement(ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, 100), "weightText", "0 kg", CairoFont.WhiteDetailText()));
         guiElements.Add(new Spacer());
         
         //Effects
-        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), "Bonuses", CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold), true));
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:Bonuses"), CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold), true));
         guiElements.AddRange(_statsToWatch.Select(viewModel => viewModel.ConstructGui(columnOneWidth, columnTwoWidth)));
 
         foreach (var element in guiElements)

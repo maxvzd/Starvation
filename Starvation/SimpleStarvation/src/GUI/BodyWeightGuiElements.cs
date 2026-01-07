@@ -1,4 +1,6 @@
-﻿using Vintagestory.API.Client;
+﻿using System;
+using Vintagestory.API.Client;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 
 namespace Starvation.GUI;
@@ -84,27 +86,27 @@ internal class LabelElement : GuiElement
     }
 }
 
-internal class LabelViewModel(string title, BonusType type)
+internal class LabelViewModel(BonusType type)
 {
-    public string Key => $"{title.Replace(" ", "")}-key";
+    public string Key => $"{Enum.GetName(type)}-key";
 
     public virtual string GetValue(ITreeAttribute bonusTree)
     {
-        var value = bonusTree.GetFloat(BonusTypeToKey.GetKey(type));
+        var value = bonusTree.GetFloat(Enum.GetName(type));
         return $"{value * 100:0}%";
     }
 
     public LabelElement ConstructGui(double columnOneWidth, double columnTwoWidth)
     {
-        return new LabelElement(columnOneWidth, columnTwoWidth, title, Key);
+        return new LabelElement(columnOneWidth, columnTwoWidth, Lang.Get($"starvation:{Enum.GetName(type)}"), Key);
     }
 }
 
-internal class MaxHealthViewModel(string title, BonusType type) : LabelViewModel(title, type)
+internal class MaxHealthViewModel(BonusType type) : LabelViewModel(type)
 {
     public override string GetValue(ITreeAttribute bonusTree)
     {
-        var value = bonusTree.GetFloat(BonusTypeToKey.GetKey(type));
+        var value = bonusTree.GetFloat(nameof(type));
         var prefix = string.Empty;
         if (value > 0)
         {

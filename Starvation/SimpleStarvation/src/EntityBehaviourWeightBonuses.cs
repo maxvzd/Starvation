@@ -14,9 +14,9 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
     public const string BEHAVIOUR_KEY = "weight-bonuses";
     
     private static SimplyStarvingConfig Config => SimpleStarvationModSystem.Config ?? new MutableConfig().Freeze();
-    private IReadOnlyList<Bonus>? WeightBonuses => Config.WeightBonuses;
-    private IReadOnlyList<IGrouping<BonusType, Bonus>>? _distinctBonusTypes = null;
-    private ITreeAttribute _weightBonusTree;
+    private static IReadOnlyList<Bonus>? WeightBonuses => Config.WeightBonuses;
+    private IReadOnlyList<IGrouping<BonusType, Bonus>>? _distinctBonusTypes;
+    private ITreeAttribute? _weightBonusTree;
 
     public override void OnEntitySpawn()
     {
@@ -106,7 +106,7 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
             if (!string.IsNullOrEmpty(key))
             {
                 entity.Stats.Set(key, "SimpleStarvation", bonus.Value);
-                _weightBonusTree.SetFloat(BonusTypeToKey.GetKey(bonus.Type), bonus.Value);
+                _weightBonusTree?.SetFloat(Enum.GetName(bonus.Type), bonus.Value);
             }
         }
         entity.WatchedAttributes.MarkPathDirty(PropertyName());

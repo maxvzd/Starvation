@@ -1,3 +1,20 @@
 {
-    "hello": "hello world!"
+    "WalkSpeed": "Walk Speed",
+    "MiningSpeed": "Mining Speed",
+    "MaxHealth": "Max Health",
+    "MeleeDamage": "Melee Damage",
+    "RangedDamage": "Ranged Damage",
+    "HealingEffectiveness": "Walk Speed",
+    "HungerRate": "Hunger Rate",
+    "RangeWeaponAccuracy": "Ranged Accuracy",
+    "RangedWeaponsSpeed": "Projectile Speed",
+    "RustyGearDropRate": "Luck",
+    "AnimalSeekingRange": "Tastiness",
+    "BowDrawStrength": "Bow Draw Strength",
+    "GliderLiftMax": "Glider Lift",
+    "GliderSpeedMax": "Glider Speed",
+    "JumpHeightMul": "Jump Height",
+    "Nutrition": "Nutrition",
+    "Weight" : "Weight",
+    "Bonuses": "Bonuses"
 }
