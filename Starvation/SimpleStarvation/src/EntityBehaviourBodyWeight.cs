@@ -113,7 +113,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 
         StoredSaturation += satDiff;
         
-        entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
+        //entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
     }
 
     private void MetaboliseFoodStores()
@@ -127,8 +127,8 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 
         StoredSaturation -= lossPerHour * hourDiff;
             
-        var currentHour = entity.World.Calendar.HourOfDay;
-        entity.World.Logger.Debug($"Metabolising: currentHour: {currentHour}, hourLastTick: {_hourAtLastTick}, hourDiff {hourDiff}, lossPerHour:{lossPerHour}, Loss: {lossPerHour * hourDiff}");
+        //var currentHour = entity.World.Calendar.HourOfDay;
+        //entity.World.Logger.Debug($"Metabolising: currentHour: {currentHour}, hourLastTick: {_hourAtLastTick}, hourDiff {hourDiff}, lossPerHour:{lossPerHour}, Loss: {lossPerHour * hourDiff}");
     }
     
     private float CalculateTimeSinceHungerLastChecked()
@@ -153,7 +153,6 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 
         var minWeightOnRespawn = Math.Clamp(Config.LowestPossibleWeightOnRespawn, Config.CriticalWeight, Config.MaxWeight);
         
-        //var newSaturation = (float)StoredSaturation * percentageLost;
         var newSaturation = GetSatForWeight(currentBodyWeight - (currentBodyWeight * percentageLost));
         var satAtLowestWeightPossible = GetSatForWeight(minWeightOnRespawn);
 
@@ -253,7 +252,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
             AddVelocity = addVel,
 
             LifeLength = 5f,
-            GravityEffect = .5f,
+            GravityEffect = .8f,
 
             MinSize = 1f,
             MaxSize = 1.5f,
