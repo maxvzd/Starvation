@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Config;
@@ -15,29 +16,32 @@ public class BodyWeightGui : GuiDialog
     
     public BodyWeightGui(ICoreClientAPI coreApi, ElementBounds bounds) : base(coreApi)
     {
-        _statsToWatch = new List<LabelViewModel>
-        {
-            new(BonusType.WalkSpeed),
-            new(BonusType.MiningSpeed),
-            new MaxHealthViewModel(BonusType.MaxHealth),
-            new(BonusType.MeleeDamage),
-            new(BonusType.RangedDamage),
-            new(BonusType.RangeWeaponAccuracy),
-            new(BonusType.RangedWeaponsSpeed),
-            new(BonusType.RustyGearDropRate),
-            new(BonusType.AnimalSeekingRange),
-            new(BonusType.BowDrawStrength),
-            new(BonusType.GliderLiftMax),
-            new(BonusType.GliderSpeedMax),
-        };
+        var bonusTypesInConfig = SimpleStarvationModSystem.Config?.WeightBonuses?
+            .DistinctBy(x => x.Type)
+            .Select(x => GetViewModelForBonusType(x.Type)).ToList();
         
+        _statsToWatch = bonusTypesInConfig ??
+        [
+            new LabelViewModel(BonusType.WalkSpeed),
+            new LabelViewModel(BonusType.MiningSpeed),
+            new MaxHealthViewModel(BonusType.MaxHealth),
+            new LabelViewModel(BonusType.MeleeDamage),
+            new LabelViewModel(BonusType.RangedDamage),
+            new LabelViewModel(BonusType.RangeWeaponAccuracy),
+            new LabelViewModel(BonusType.RangedWeaponsSpeed),
+            new LabelViewModel(BonusType.RustyGearDropRate),
+            new LabelViewModel(BonusType.AnimalSeekingRange),
+            new LabelViewModel(BonusType.BowDrawStrength),
+            new LabelViewModel(BonusType.GliderLiftMax),
+            new LabelViewModel(BonusType.GliderSpeedMax)
+        ];
         
         SetupDialog(bounds);
         
         _bodyWeightTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
         _weightBonusTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY);
     }
-    
+
     public override void OnGuiOpened()
     {
         base.OnGuiOpened();
@@ -121,6 +125,13 @@ public class BodyWeightGui : GuiDialog
     {
         TryClose();
     }
+    
+    private static LabelViewModel GetViewModelForBonusType(BonusType type) =>
+        type switch
+        {
+            BonusType.MaxHealth => new MaxHealthViewModel(type),
+            _ => new LabelViewModel(type)
+        };
 }
 
 internal static class ComposerExtension

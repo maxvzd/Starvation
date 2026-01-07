@@ -5,6 +5,7 @@ using Starvation.Config;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 
 namespace Starvation;
 
@@ -103,10 +104,16 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
         foreach (var bonus in bonuses)
         {
             var key = BonusTypeToKey.GetKey(bonus.Type);
-            if (!string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(key)) continue;
+            
+            entity.Stats.Set(key, "SimpleStarvation", bonus.Value);
+            _weightBonusTree?.SetFloat(Enum.GetName(bonus.Type), bonus.Value);
+            
+            //TODO: Maybe sort this out one day (command pattern)
+            if (bonus.Type == BonusType.MaxHealth)
             {
-                entity.Stats.Set(key, "SimpleStarvation", bonus.Value);
-                _weightBonusTree?.SetFloat(Enum.GetName(bonus.Type), bonus.Value);
+                var healthBehaviour = entity.GetBehavior<EntityBehaviorHealth>();
+                healthBehaviour?.UpdateMaxHealth();
             }
         }
         entity.WatchedAttributes.MarkPathDirty(PropertyName());
@@ -118,5 +125,6 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
         {
             entity.Stats.Remove(stat.Key, "SimpleStarvation");
         }
+        entity.WatchedAttributes.MarkPathDirty(PropertyName());
     }
 }

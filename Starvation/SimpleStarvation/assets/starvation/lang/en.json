@@ -4,7 +4,7 @@
     "MaxHealth": "Max Health",
     "MeleeDamage": "Melee Damage",
     "RangedDamage": "Ranged Damage",
-    "HealingEffectiveness": "Walk Speed",
+    "HealingEffectiveness": "Time to heal ",
     "HungerRate": "Hunger Rate",
     "RangeWeaponAccuracy": "Ranged Accuracy",
     "RangedWeaponsSpeed": "Projectile Speed",

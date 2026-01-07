@@ -106,13 +106,12 @@ internal class MaxHealthViewModel(BonusType type) : LabelViewModel(type)
 {
     public override string GetValue(ITreeAttribute bonusTree)
     {
-        var value = bonusTree.GetFloat(nameof(type));
+        var value = bonusTree.GetFloat(Enum.GetName(type));
         var prefix = string.Empty;
         if (value > 0)
         {
             prefix = "+";
         }
-
-        return $"{prefix}{value}";
+        return $"{prefix}{value:0.0}";
     }
 }
