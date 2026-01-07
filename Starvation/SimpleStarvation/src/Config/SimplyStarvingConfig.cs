@@ -11,16 +11,51 @@ public class SimplyStarvingConfig
         _config = config;
         config.WeightBonuses ??= new List<Bonus>
         {
-            // new(40, new Bonus(-0.5f, -0.2f, -5f, -0.3f, -0.3f)), 
-            // new(50, new Bonus(-0.3f, -0.15f, -3f, -0.2f, -0.2f)), 
-            // new(60, new Bonus(-0.1f, -0.05f, -2f, -0.1f, -0.1f)), 
-            // new(80, new Bonus(.25f, .1f, 3f, 0.1f, 0.1f)),
-            // new(90, new Bonus(-0.1f, 0f, 2f, 0.05f, 0f)),
-            // new(100, new Bonus(-0.15f, 0f, 1f, 0.05f, 0f)) // Damn boi he thicc
+            new(BonusType.WalkSpeed, -0.3f, 40),
+            new(BonusType.WalkSpeed, 0f, 60),
+            new(BonusType.WalkSpeed, 0.2f, 70),
+            new(BonusType.WalkSpeed, -0.1f, 100),
             
-            new(BonusType.WalkSpeed, 1, 70),
-            new(BonusType.WalkSpeed, 0, 90),
-            new(BonusType.MiningSpeed, 1, 80),
+            new(BonusType.MiningSpeed, -0.25f, 40),
+            new(BonusType.MiningSpeed, 0f, 60),
+            new(BonusType.MiningSpeed, .3f, 100),
+            
+            new(BonusType.MaxHealth, -3f, 40),
+            new(BonusType.MaxHealth, 0f, 60),
+            new(BonusType.MaxHealth, 5f, 70),
+            new(BonusType.MaxHealth, 3f, 100),
+            
+            new(BonusType.MeleeDamage, -0.5f, 40),
+            new(BonusType.MeleeDamage, 0f, 60),
+            new(BonusType.MeleeDamage, 0.3f, 100),
+            
+            new(BonusType.RangedDamage, -0.3f, 40),
+            new(BonusType.RangedDamage, 0f, 60),
+            new(BonusType.RangedDamage, 0.3f, 80),
+            new(BonusType.RangedDamage, 0.1f, 100),
+            
+            new(BonusType.RangeWeaponAccuracy, -0.6f, 40),
+            new(BonusType.RangeWeaponAccuracy, 0.1f, 60),
+            new(BonusType.RangeWeaponAccuracy, 0.3f, 80),
+            new(BonusType.RangeWeaponAccuracy, 0.1f, 100),
+            
+            new(BonusType.RustyGearDropRate, .3f, 40),
+            new(BonusType.RustyGearDropRate, 0, 60),
+            
+            new(BonusType.AnimalSeekingRange, -0.3f, 40),
+            new(BonusType.AnimalSeekingRange, 0f, 80),
+            new(BonusType.AnimalSeekingRange, 0.3f, 100),
+            
+            new(BonusType.BowDrawStrength, -0.3f, 40),
+            new(BonusType.BowDrawStrength, -0.2f, 60),
+            new(BonusType.BowDrawStrength, 0.2f, 100),
+            
+            new(BonusType.GliderLiftMax, 0.3f, 40),
+            new(BonusType.GliderLiftMax, 0f, 70),
+            new(BonusType.GliderLiftMax, -0.5f, 100),
+            
+            new(BonusType.GliderSpeedMax, 0.3f, 40),
+            new(BonusType.GliderSpeedMax, 0f, 100)
         };
     }
 
