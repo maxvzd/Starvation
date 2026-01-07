@@ -12,9 +12,12 @@ namespace Starvation;
 public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 {
     private float _saturationLastTick = 0f;
-    private float _hourAtLastTick = 0f;
+    private double _hourAtLastHungerTick = 0f;
+    private double _hourAtLastTick = 0f;
     private float _hungerTick = 0f;
     private ITreeAttribute? _bodyWeightTree;
+    
+    private double _timePlayerSpentSleeping;
     
     private static SimplyStarvingConfig Config => SimpleStarvationModSystem.Config ?? new MutableConfig().Freeze();
     private float WeightToSaturationScale =>  AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
@@ -53,8 +56,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             _saturationLastTick = hungerBehaviour.Saturation;
         }
-        _hourAtLastTick = entity.World.Calendar.HourOfDay;
-
+        
         _bodyWeightTree = entity.WatchedAttributes.GetTreeAttribute(PropertyName());
         if (_bodyWeightTree is null)
         {
@@ -69,22 +71,29 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 
     public override void OnGameTick(float deltaTime)
     {
-        if (entity.World.Side != EnumAppSide.Server) return;
+        if (entity.World.Side != EnumAppSide.Server || PlayerHelper.IsPlayerInCreative(entity)) return;
+
         _hungerTick += deltaTime;
+        var now = entity.World.Calendar.TotalHours;
+        var timeDifference = now - _hourAtLastTick;
+        _hourAtLastTick = now;
+        if (entity is EntityPlayer player && player.MountedOn is BlockEntityBed)
+        {
+            _timePlayerSpentSleeping += timeDifference;
+        }
         
         if (_hungerTick < 10) return;
-
-        if (PlayerHelper.IsPlayerInCreative(entity)) return;
-        
+       
         var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
         if (hungerBehaviour is null) return;
 
         DigestFood(hungerBehaviour);
         MetaboliseFoodStores();
             
-        _hourAtLastTick = entity.World.Calendar.HourOfDay;
+        _hourAtLastHungerTick = entity.World.Calendar.TotalHours;
         _saturationLastTick = hungerBehaviour.Saturation;
         _hungerTick = 0f;
+        _timePlayerSpentSleeping = 0;
 
         if (BodyWeight < Config.CriticalWeight)
         {
@@ -112,7 +121,6 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         satDiff = Math.Max(0, satDiff);
 
         StoredSaturation += satDiff;
-        
         //entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
     }
 
@@ -122,26 +130,37 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         
         var hoursPerDay = entity.World.Calendar.HoursPerDay;
         var lossPerHour = Config.ExpectedSaturationPerDay / hoursPerDay * hungerRate * GlobalConstants.HungerSpeedModifier;
-
         var hourDiff = CalculateTimeSinceHungerLastChecked();
 
-        StoredSaturation -= lossPerHour * hourDiff;
+        var timeAsleep = Math.Min(_timePlayerSpentSleeping, hourDiff);
+        var timeAwake = hourDiff - timeAsleep;
+
+        StoredSaturation -= (float)((timeAwake * lossPerHour) + (timeAsleep * lossPerHour * 0.25));
             
-        //var currentHour = entity.World.Calendar.HourOfDay;
-        //entity.World.Logger.Debug($"Metabolising: currentHour: {currentHour}, hourLastTick: {_hourAtLastTick}, hourDiff {hourDiff}, lossPerHour:{lossPerHour}, Loss: {lossPerHour * hourDiff}");
+        entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
+                                  $"hourLastTick: {_hourAtLastHungerTick}, " +
+                                  $"hourDiff {hourDiff}, " +
+                                  $"lossPerHour:{lossPerHour}, " +
+                                  $"Loss: {lossPerHour * hourDiff}");
+        
+        
+        entity.World.Logger.Debug($"hourdiff: {hourDiff}, sleep:{timeAsleep}, awake:{timeAwake}");
     }
     
-    private float CalculateTimeSinceHungerLastChecked()
+    private double CalculateTimeSinceHungerLastChecked()
     {
-        var hoursPerDay = entity.World.Calendar.HoursPerDay;
-        var currentHour = entity.World.Calendar.HourOfDay;
-        if (currentHour < _hourAtLastTick)
-        {
-            currentHour += hoursPerDay;
-        }
-        return currentHour - _hourAtLastTick;
+        var now = entity.World.Calendar.TotalHours;
+        var diff = now - _hourAtLastHungerTick;
+        _hourAtLastHungerTick = now;
+        return diff;
     }
-    
+
+    public override void OnEntitySpawn()
+    {
+        base.OnEntitySpawn();
+        _hourAtLastHungerTick = entity.World.Calendar.TotalHours;
+    }
+
     public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)
     {
         if (damageSource is not { Type: EnumDamageType.Heal, Source: EnumDamageSource.Revive }) return;
