@@ -90,10 +90,10 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
     
     private static Bonus LerpBonus(Bonus below, Bonus above, float currentBodyWeight)
     {
-        if (Math.Abs(below.Weight - above.Weight) < 0.001f) return below;
+        if (float.Abs(below.Weight - above.Weight) < 0.001f) return below;
         
         var lerpFactor = (currentBodyWeight - below.Weight) / (above.Weight - below.Weight);
-        lerpFactor = GameMath.Clamp(lerpFactor, 0, 1);
+        lerpFactor = float.Clamp(lerpFactor, 0, 1);
         
         var value = GameMath.Lerp(below.Value, above.Value, lerpFactor);
         return new Bonus(below.Type, value, currentBodyWeight);

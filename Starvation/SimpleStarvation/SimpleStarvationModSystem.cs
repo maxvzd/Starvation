@@ -42,8 +42,8 @@ public class SimpleStarvationModSystem : ModSystem
         //Make sure we update the weight bonuses on a player when they switch gamemode so there's no 10sec gap and creative gets updated
         api.Event.PlayerSwitchGameMode += player =>
         {
-            var weightBonusesBehaviour = player.Entity.GetBehavior<EntityBehaviourWeightBonuses>();
-            weightBonusesBehaviour?.SetWeightBonuses();
+            player.Entity.GetBehavior<EntityBehaviourWeightBonuses>()?.SetWeightBonuses();
+            player.Entity.GetBehavior<EntityBehaviourBodyWeight>()?.ResetTicks();
         };
     }
 

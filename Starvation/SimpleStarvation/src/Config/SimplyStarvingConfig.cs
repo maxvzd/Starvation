@@ -2,9 +2,9 @@
 
 namespace Starvation.Config;
 
-public class SimplyStarvingConfig
+public class SimplyStarvingConfig : IConfig
 {
-    private readonly MutableConfig _config;
+    private readonly MutableConfig _config; 
 
     public SimplyStarvingConfig(MutableConfig config)
     {
@@ -59,15 +59,17 @@ public class SimplyStarvingConfig
         };
     }
 
-    public float HealthyWeight => _config.HealthyWeight;
-    public float CriticalWeight => _config.CriticalWeight;
+    public float HealthyWeight => float.Clamp(_config.HealthyWeight, CriticalWeight, MaxWeight);
+    public float CriticalWeight => float.Min(_config.CriticalWeight, 0);
     public float MaxWeight => _config.MaxWeight;
     public float ExpectedSaturationPerDay => _config.ExpectedSaturationPerDay;
     public float NumberOfMonthsToStarve => _config.NumberOfMonthsToStarve;
-    public float ThrowUpThreshold => _config.ThrowUpThreshold;
+    public float ThrowUpThreshold => float.Min(_config.ThrowUpThreshold, 0);
     public bool ApplyWeightBonuses => _config.ApplyWeightBonuses;
-    public float WeightLossOnDeath => _config.WeightLossOnDeath;
-    public float LowestPossibleWeightOnRespawn => _config.LowestPossibleWeightOnRespawn;
-    public float PlayerStartingWeight => _config.PlayerStartingWeight;
+    public float WeightLossOnDeath => float.Clamp(_config.WeightLossOnDeath, 0, 1);
+    public float LowestPossibleWeightOnRespawn => float.Clamp(_config.LowestPossibleWeightOnRespawn, CriticalWeight, MaxWeight);
+    public float PlayerStartingWeight => float.Clamp(_config.PlayerStartingWeight, CriticalWeight, MaxWeight);
     public IReadOnlyList<Bonus>? WeightBonuses => _config.WeightBonuses;
+    public float StoodStillModifier => float.Clamp(_config.StoodStillModifier, 0, 1);
+    public float SleepModifier => float.Clamp(_config.SleepModifier, 0 ,1);
 }

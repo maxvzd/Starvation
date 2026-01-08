@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Starvation.Config;
 
-public class MutableConfig
+public class MutableConfig : IConfig
 {
     /// <summary>
     /// A regular weight for a regular man
@@ -61,6 +61,18 @@ public class MutableConfig
     /// </summary>
     [JsonInclude]
     public IReadOnlyList<Bonus>? WeightBonuses { get; set; }
+
+    /// <summary>
+    /// How much less saturation you consume when standing still
+    /// </summary>
+    [JsonInclude]
+    public float StoodStillModifier { get; set; } = 0.25f;
+
+    /// <summary>
+    /// How much less saturation you consume when sleeping
+    /// </summary>
+    [JsonInclude]
+    public float SleepModifier { get; set; } = 0.25f;
 
     public SimplyStarvingConfig Freeze()
     {

@@ -88,17 +88,18 @@ internal class LabelElement : GuiElement
 
 internal class LabelViewModel(BonusType type)
 {
-    public string Key => $"{Enum.GetName(type)}-key";
+    public string Key => $"{Enum.GetName(Type)}-key";
+    protected readonly BonusType Type = type;
 
     public virtual string GetValue(ITreeAttribute bonusTree)
     {
-        var value = bonusTree.GetFloat(Enum.GetName(type));
+        var value = bonusTree.GetFloat(Enum.GetName(Type));
         return $"{value * 100:0}%";
     }
 
     public LabelElement ConstructGui(double columnOneWidth, double columnTwoWidth)
     {
-        return new LabelElement(columnOneWidth, columnTwoWidth, Lang.Get($"starvation:{Enum.GetName(type)}"), Key);
+        return new LabelElement(columnOneWidth, columnTwoWidth, Lang.Get($"starvation:{Enum.GetName(Type)}"), Key);
     }
 }
 
@@ -106,7 +107,7 @@ internal class MaxHealthViewModel(BonusType type) : LabelViewModel(type)
 {
     public override string GetValue(ITreeAttribute bonusTree)
     {
-        var value = bonusTree.GetFloat(Enum.GetName(type));
+        var value = bonusTree.GetFloat(Enum.GetName(Type));
         var prefix = string.Empty;
         if (value > 0)
         {
