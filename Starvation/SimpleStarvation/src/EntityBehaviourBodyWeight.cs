@@ -137,16 +137,16 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         var timeActive = timeAwake - _timePlayerStoodStandingStill;
 
         //Emulate vanilla logic of less digestion when stood still
-        var loss = (float)(timeActive * lossPerHour + timeAsleep * lossPerHour * 0.25 + _timePlayerStoodStandingStill * lossPerHour * 0.25);
-        StoredSaturation -= loss;
+        var lossdotjpeg = (float)(timeActive * lossPerHour + timeAsleep * lossPerHour * 0.25 + _timePlayerStoodStandingStill * lossPerHour * 0.25);
+        StoredSaturation -= lossdotjpeg;
             
-        entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
-                                  $"hourLastTick: {_hourAtLastHungerTick}, " +
-                                  $"hourDiff {hourDiff}, " +
-                                  $"lossPerHour:{lossPerHour}, " +
-                                  $"Loss: {loss}");
+        // entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
+        //                           $"hourLastTick: {_hourAtLastHungerTick}, " +
+        //                           $"hourDiff {hourDiff}, " +
+        //                           $"lossPerHour:{lossPerHour}, " +
+        //                           $"Loss: {loss}");
         
-        entity.World.Logger.Debug($"hourdiff: {hourDiff}, sleep:{timeAsleep}, active:{timeActive}, stoodStill:{_timePlayerStoodStandingStill}");
+        //entity.World.Logger.Debug($"hourdiff: {hourDiff}, sleep:{timeAsleep}, active:{timeActive}, stoodStill:{_timePlayerStoodStandingStill}");
     }
     
     private void TrackPlayerCurrentActions()
