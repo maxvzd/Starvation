@@ -10,7 +10,7 @@ using Vintagestory.GameContent;
 namespace Starvation.Patches;
 
 [HarmonyPatchCategory("simplestarvation")]
-public class EntityBehaviourHungerHarmonyPatches
+public class EntityBehaviourHungerPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(typeof(EntityBehaviorHunger), "SlowTick")]
