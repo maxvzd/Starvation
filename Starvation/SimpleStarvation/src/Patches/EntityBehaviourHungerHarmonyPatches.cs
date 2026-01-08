@@ -132,9 +132,17 @@ public class EntityBehaviourHungerHarmonyPatches
     
     [HarmonyPostfix]
     [HarmonyPatch(typeof(EntityBehaviorHunger), "OnEntityReceiveSaturation")]
-    public static void ReceiveSaturationPostfix(EntityBehaviorHunger __instance)
+    private static void ReceiveSaturationPostfix(EntityBehaviorHunger __instance)
     {
         var bodyWeight = __instance.entity.GetBehavior<EntityBehaviourBodyWeight>();
         bodyWeight?.CheckForThrowUp();
+    }
+
+    //Remove satuaration loss
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(EntityBehaviorHunger), "OnEntityReceiveSaturation")]
+    private static void ReceiveSaturationPrefix(ref float saturationLossDelay)
+    {
+        saturationLossDelay = 0f;
     }
 }
