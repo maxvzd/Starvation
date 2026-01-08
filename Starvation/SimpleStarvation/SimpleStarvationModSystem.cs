@@ -13,6 +13,7 @@ namespace Starvation;
 public class SimpleStarvationModSystem : ModSystem
 {
     private Harmony? _patcher;
+    private BodyWeightGui? _dialog;
 
     public static SimplyStarvingConfig? Config { private set; get; }
 
@@ -91,19 +92,36 @@ public class SimpleStarvationModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         base.StartClientSide(api);
-
+        
         if (api.Gui.LoadedGuis.FirstOrDefault(x => x is GuiDialogCharacterBase) is not GuiDialogCharacterBase statsDialog) return;
 
         statsDialog.ComposeExtraGuis += () =>
         {
+            if (PlayerHelper.IsPlayerInCreative(api.World.Player.Entity))
+            {
+                _dialog?.Dispose();
+                _dialog = null;
+                return;
+            }
+            
             var composer = statsDialog.Composers["playerstats"];
             if (composer is null) return;
 
-            var dialog = new BodyWeightGui(api, composer.Bounds);
-
-            statsDialog.OnOpened += () => dialog.TryOpen();
-            statsDialog.OnClosed += () => dialog.TryClose();
+            _dialog ??= new BodyWeightGui(api);
+            _dialog?.SetupDialog(composer.Bounds);
         };
+        statsDialog.OnOpened += OnStatsDialogOpened;
+        statsDialog.OnClosed += OnStatsDialogClosed;
+    }
+
+    private void OnStatsDialogClosed()
+    {
+        _dialog?.TryClose();
+    }
+
+    private void OnStatsDialogOpened()
+    {
+        _dialog?.TryOpen();
     }
 
     public override void Dispose()

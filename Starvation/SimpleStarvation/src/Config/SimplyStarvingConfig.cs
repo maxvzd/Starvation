@@ -64,7 +64,7 @@ public class SimplyStarvingConfig : IConfig
     public float MaxWeight => _config.MaxWeight;
     public float ExpectedSaturationPerDay => _config.ExpectedSaturationPerDay;
     public float NumberOfMonthsToStarve => _config.NumberOfMonthsToStarve;
-    public float ThrowUpThreshold => float.Min(_config.ThrowUpThreshold, 0);
+    public float ThrowUpThreshold => float.Max(_config.ThrowUpThreshold, 0);
     public bool ApplyWeightBonuses => _config.ApplyWeightBonuses;
     public float WeightLossOnDeath => float.Clamp(_config.WeightLossOnDeath, 0, 1);
     public float LowestPossibleWeightOnRespawn => float.Clamp(_config.LowestPossibleWeightOnRespawn, CriticalWeight, MaxWeight);

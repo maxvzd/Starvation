@@ -14,7 +14,7 @@ public class BodyWeightGui : GuiDialog
     public override string ToggleKeyCombinationCode => "BodyWeightGui";
     private readonly IReadOnlyList<LabelViewModel> _statsToWatch;
     
-    public BodyWeightGui(ICoreClientAPI coreApi, ElementBounds bounds) : base(coreApi)
+    public BodyWeightGui(ICoreClientAPI coreApi) : base(coreApi)
     {
         var bonusTypesInConfig = SimpleStarvationModSystem.Config?.WeightBonuses?
             .DistinctBy(x => x.Type)
@@ -35,8 +35,6 @@ public class BodyWeightGui : GuiDialog
             new LabelViewModel(BonusType.GliderLiftMax),
             new LabelViewModel(BonusType.GliderSpeedMax)
         ];
-        
-        SetupDialog(bounds);
         
         _bodyWeightTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
         _weightBonusTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY);
@@ -60,7 +58,7 @@ public class BodyWeightGui : GuiDialog
         watchedAttributes.UnregisterListener(UpdateWeightText);
     }
     
-    private void SetupDialog(ElementBounds bounds)
+    public void SetupDialog(ElementBounds bounds)
     {
         var dialogBounds = ElementBounds.Fixed(
             (bounds.renderX + bounds.OuterWidth + GuiStyle.DialogToScreenPadding) / RuntimeEnv.GUIScale,
@@ -102,6 +100,13 @@ public class BodyWeightGui : GuiDialog
             .AddDialogTitleBar("Body Weight", OnTitleBarCloseClicked)
             .AddSimpleStarvationGuiElements(guiElements)
             .Compose();
+    }
+
+    public override void Dispose()
+    {
+        Composers.ClearComposers();
+        base.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private void UpdateWeightText()
