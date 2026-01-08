@@ -17,4 +17,5 @@ public interface IConfig
     public IReadOnlyList<Bonus>? WeightBonuses { get; }
     public float StoodStillModifier { get; }
     public float SleepModifier { get; }
+    public float SprintModifier { get; }
 }

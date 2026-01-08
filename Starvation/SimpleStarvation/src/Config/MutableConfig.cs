@@ -59,20 +59,22 @@ public class MutableConfig : IConfig
     /// <summary>
     /// Bonuses to apply at the given weight values
     /// </summary>
-    [JsonInclude]
-    public IReadOnlyList<Bonus>? WeightBonuses { get; set; }
+    [JsonInclude] public IReadOnlyList<Bonus>? WeightBonuses { get; set; }
 
     /// <summary>
     /// How much less saturation you consume when standing still
     /// </summary>
-    [JsonInclude]
-    public float StoodStillModifier { get; set; } = 0.25f;
+    [JsonInclude] public float StoodStillModifier { get; set; } = 0.25f;
 
     /// <summary>
     /// How much less saturation you consume when sleeping
     /// </summary>
-    [JsonInclude]
-    public float SleepModifier { get; set; } = 0.25f;
+    [JsonInclude] public float SleepModifier { get; set; } = 0.25f;
+    
+    /// <summary>
+    /// How much extra saturation you burn when sprinting
+    /// </summary>
+    [JsonInclude] public float SprintModifier { get; set; } = 0.1f;
 
     public SimplyStarvingConfig Freeze()
     {

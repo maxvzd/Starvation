@@ -20,6 +20,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     private double _timePlayerSpentSleeping;
     private long _timePlayerLastMoved;
     private double _timePlayerStoodStandingStill;
+    private double _timePlayerSpentSprinting;
 
     private static SimplyStarvingConfig Config => SimpleStarvationModSystem.Config ?? new MutableConfig().Freeze();
     private float WeightToSaturationScale =>  AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
@@ -113,6 +114,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         _hungerTick = 0f;
         _timePlayerSpentSleeping = 0;
         _timePlayerStoodStandingStill = 0f;
+        _timePlayerSpentSprinting = 0f;
     }
 
     private void DigestFood(EntityBehaviorHunger hungerBehaviour)
@@ -136,9 +138,13 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         
         var timeActive = timeAwake - _timePlayerStoodStandingStill;
 
-        //Emulate vanilla logic of less digestion when stood still
-        var lossdotjpeg = (float)(timeActive * lossPerHour + timeAsleep * lossPerHour * 0.25 + _timePlayerStoodStandingStill * lossPerHour * 0.25);
-        StoredSaturation -= lossdotjpeg;
+        var lossDotJpeg = (float)((timeActive * lossPerHour) 
+                                  + (timeAsleep * lossPerHour * Config.SleepModifier) 
+                                  //Emulate vanilla logic of less digestion when stood still
+                                  + (_timePlayerStoodStandingStill * lossPerHour * Config.StoodStillModifier)
+                                  //This one just adds extra and isn't a ratio of stood/sleep/awake 
+                                  + (_timePlayerSpentSprinting * lossPerHour * Config.SprintModifier));
+        StoredSaturation -= lossDotJpeg;
             
         // entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
         //                           $"hourLastTick: {_hourAtLastHungerTick}, " +
@@ -174,6 +180,13 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             _timePlayerStoodStandingStill += deltaHour;
         }
+
+        if (player.Controls.Sprint)
+        {
+            _timePlayerSpentSprinting += deltaHour;
+        }
+        
+        
         _hourAtLastTick = now;
     }
     
@@ -188,8 +201,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     public override void OnEntitySpawn()
     {
         base.OnEntitySpawn();
-        _hourAtLastHungerTick = entity.World.Calendar.TotalHours;
-        _timePlayerLastMoved = entity.World.ElapsedMilliseconds;
+        ResetTicks();
     }
 
     public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)

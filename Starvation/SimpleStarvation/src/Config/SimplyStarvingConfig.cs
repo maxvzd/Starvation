@@ -72,4 +72,5 @@ public class SimplyStarvingConfig : IConfig
     public IReadOnlyList<Bonus>? WeightBonuses => _config.WeightBonuses;
     public float StoodStillModifier => float.Clamp(_config.StoodStillModifier, 0, 1);
     public float SleepModifier => float.Clamp(_config.SleepModifier, 0 ,1);
+    public float SprintModifier => float.Clamp(_config.SprintModifier, 0 ,1);
 }
