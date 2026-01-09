@@ -97,7 +97,7 @@ public class BodyWeightGui : GuiDialog
 
         SingleComposer = capi.Gui.CreateCompo("bodyweightdialog", dialogBounds)
             .AddShadedDialogBG(bgBounds)
-            .AddDialogTitleBar("Body Weight", OnTitleBarCloseClicked)
+            .AddDialogTitleBar(Lang.Get("starvation:weight-title"), OnTitleBarCloseClicked)
             .AddSimpleStarvationGuiElements(guiElements)
             .Compose();
     }
