@@ -52,7 +52,7 @@ public class SimpleStarvationModSystem : ModSystem
         var commandsHandler = new ServerCommandHandlers(api);
 
         api.ChatCommands
-            .Create("bodyweight")
+            .Create("weight")
             .RequiresPrivilege(Privilege.root)
             .RequiresPlayer()
             .WithDescription("Commands for Simple Starvation. Type /help for available commands.")
