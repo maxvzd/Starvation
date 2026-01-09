@@ -138,12 +138,49 @@ public class EntityBehaviourHungerPatches
         var bodyWeight = __instance.entity.GetBehavior<EntityBehaviourBodyWeight>();
         bodyWeight?.CheckForThrowUp();
     }
-
-    //Remove saturation loss delay
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(EntityBehaviorHunger), "OnEntityReceiveSaturation")]
-    private static void ReceiveSaturationPrefix(ref float saturationLossDelay)
+    
+    [HarmonyTranspiler]
+    [HarmonyPatch(typeof(EntityBehaviorHunger), "ReduceSaturation")]
+    private static IEnumerable<CodeInstruction> ReduceSaturationTranspiler(IEnumerable<CodeInstruction> instructions)
     {
-        saturationLossDelay = 0f;
+        var codes = new List<CodeInstruction>(instructions);
+
+        // Identify local index of isondelay (initialized with ldc.i4.0; stloc)
+        int? isOnDelayLocal = null;
+        for (var i = 0; i < codes.Count - 1; i++)
+        {
+            if (codes[i].opcode != OpCodes.Ldc_I4_0 || !IsStloc(codes[i + 1], out var idx)) continue;
+            
+            isOnDelayLocal = idx;
+            break;
+        }
+
+        // Force isondelay to remain false by rewriting any assignments of true to false
+        if (isOnDelayLocal.HasValue)
+        {
+            for (var i = 0; i < codes.Count - 1; i++)
+            {
+                if (codes[i].opcode == OpCodes.Ldc_I4_1 && IsStloc(codes[i + 1], out var idx) && idx == isOnDelayLocal.Value)
+                {
+                    codes[i].opcode = OpCodes.Ldc_I4_0;
+                }
+            }
+        }
+        return codes;
+    }
+
+    private static bool IsStloc(CodeInstruction ci, out int index)
+    {
+        index = -1;
+        if (ci.opcode == OpCodes.Stloc_0) { index = 0; return true; }
+        if (ci.opcode == OpCodes.Stloc_1) { index = 1; return true; }
+        if (ci.opcode == OpCodes.Stloc_2) { index = 2; return true; }
+        if (ci.opcode == OpCodes.Stloc_3) { index = 3; return true; }
+        if (ci.opcode == OpCodes.Stloc_S || ci.opcode == OpCodes.Stloc)
+        {
+            if (ci.operand is LocalBuilder lb) { index = lb.LocalIndex; return true; }
+            if (ci.operand is int idx) { index = idx; return true; }
+        }
+        return false;
     }
 }
