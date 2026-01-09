@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
-using Starvation.Config;
-using Starvation.GUI;
+using SimpleStarvation.Config;
+using SimpleStarvation.GUI;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-namespace Starvation;
+namespace SimpleStarvation;
 
 public class SimpleStarvationModSystem : ModSystem
 {

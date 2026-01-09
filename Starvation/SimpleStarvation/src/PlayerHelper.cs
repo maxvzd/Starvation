@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
-namespace Starvation;
+namespace SimpleStarvation;
 
 public static class PlayerHelper
 {

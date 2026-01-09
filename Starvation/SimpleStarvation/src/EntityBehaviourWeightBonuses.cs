@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Starvation.Config;
+using SimpleStarvation.Config;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
-namespace Starvation;
+namespace SimpleStarvation;
 
 public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity)
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Starvation;
+namespace SimpleStarvation;
 
 public readonly struct Bonus(BonusType type, float value, float weight)
 {

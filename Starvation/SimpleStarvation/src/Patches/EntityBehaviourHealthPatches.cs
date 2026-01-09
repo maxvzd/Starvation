@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Vintagestory.GameContent;
 
-namespace Starvation.Patches;
+namespace SimpleStarvation.Patches;
 
 [HarmonyPatchCategory("simplestarvation")]
 public class EntityBehaviourHealthPatches

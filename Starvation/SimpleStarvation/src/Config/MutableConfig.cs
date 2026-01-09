@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Starvation.Config;
+namespace SimpleStarvation.Config;
 
 public class MutableConfig : IConfig
 {

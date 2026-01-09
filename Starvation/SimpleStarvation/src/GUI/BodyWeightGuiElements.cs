@@ -3,7 +3,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 
-namespace Starvation.GUI;
+namespace SimpleStarvation.GUI;
 
 internal abstract class GuiElement(bool newLine)
 {

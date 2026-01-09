@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Starvation.Config;
+namespace SimpleStarvation.Config;
 
 public class SimplyStarvingConfig : IConfig
 {

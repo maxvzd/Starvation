@@ -2,7 +2,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-namespace Starvation;
+namespace SimpleStarvation;
 
 public class ServerCommandHandlers(ICoreServerAPI serverApi
 )
