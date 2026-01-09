@@ -184,8 +184,6 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             _timePlayerSpentSprinting += deltaHour;
         }
-        
-        
         _hourAtLastTick = now;
     }
     

@@ -14,6 +14,7 @@ public class EntityBehaviourHungerPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(typeof(EntityBehaviorHunger), "SlowTick")]
+    //Removes damage when saturation = 0;
     private static IEnumerable<CodeInstruction> HungerSlowTickTranspiler(IEnumerable<CodeInstruction> instructions)
     {
         var receiveDamage = AccessTools.Method(
@@ -138,7 +139,7 @@ public class EntityBehaviourHungerPatches
         bodyWeight?.CheckForThrowUp();
     }
 
-    //Remove satuaration loss
+    //Remove saturation loss delay
     [HarmonyPrefix]
     [HarmonyPatch(typeof(EntityBehaviorHunger), "OnEntityReceiveSaturation")]
     private static void ReceiveSaturationPrefix(ref float saturationLossDelay)
