@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SimpleStarvation.Config;
+using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
@@ -29,6 +30,12 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
 
     public override void Initialize(EntityProperties properties, JsonObject attributes)
     {
+        if (entity.World.Side != EnumAppSide.Server)
+        {
+            entity.RemoveBehavior(this);
+            return;
+        }
+        
         base.Initialize(properties, attributes);
         _weightBonusTree = entity.WatchedAttributes.GetTreeAttribute(PropertyName());
         if (_weightBonusTree is null)

@@ -51,8 +51,13 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 
     public override void Initialize(EntityProperties properties, JsonObject attributes)
     {
+        if (entity.World.Side != EnumAppSide.Server)
+        {
+            entity.RemoveBehavior(this);
+            return;
+        }
+        
         base.Initialize(properties, attributes);
-
         var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
         if (hungerBehaviour is not null)
         {
@@ -110,7 +115,6 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         _hourAtLastTick = now;
         _hungerTick = 0f;
         _hourAtLastHungerTick = now;
-        _hungerTick = 0f;
         _timePlayerSpentSleeping = 0;
         _timePlayerStoodStandingStill = 0f;
         _timePlayerSpentSprinting = 0f;
@@ -121,7 +125,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         var satDiff = _saturationLastTick - hungerBehaviour.Saturation; 
         StoredSaturation += float.Max(0, satDiff);
         
-        //entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
+        entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
     }
 
     private void MetaboliseFoodStores()
@@ -145,13 +149,12 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
                                   + (_timePlayerSpentSprinting * lossPerHour * Config.SprintModifier));
         StoredSaturation -= lossDotJpeg;
             
-        // entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
-        //                           $"hourLastTick: {_hourAtLastHungerTick}, " +
-        //                           $"hourDiff {hourDiff}, " +
-        //                           $"lossPerHour:{lossPerHour}, " +
-        //                           $"Loss: {loss}");
-        
-        //entity.World.Logger.Debug($"hourdiff: {hourDiff}, sleep:{timeAsleep}, active:{timeActive}, stoodStill:{_timePlayerStoodStandingStill}");
+        entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
+                                  $"hourLastTick: {_hourAtLastHungerTick}, " +
+                                  $"hourDiff {hourDiff}, " +
+                                  $"lossPerHour:{lossPerHour}, " +
+                                  $"Loss: {lossDotJpeg}");
+        entity.World.Logger.Debug($"hourdiff: {hourDiff}, sleep:{timeAsleep}, active:{timeActive}, stoodStill:{_timePlayerStoodStandingStill}");
     }
     
     private void TrackPlayerCurrentActions()
@@ -191,7 +194,6 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     {
         var now = entity.World.Calendar.TotalHours;
         var diff = now - _hourAtLastHungerTick;
-        _hourAtLastHungerTick = now;
         return diff;
     }
 
@@ -241,7 +243,6 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     {
         BodyWeight = Config.CriticalWeight + StoredSaturation / WeightToSaturationScale;
         entity.GetBehavior<EntityBehaviourWeightBonuses>()?.SetWeightBonuses();
-
     }
     
     private float GetSatForWeight(float weightInKg)

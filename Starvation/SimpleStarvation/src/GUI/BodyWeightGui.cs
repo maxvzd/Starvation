@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Config;
-using Vintagestory.API.Datastructures;
 
 namespace SimpleStarvation.GUI;
 
 public class BodyWeightGui : GuiDialog
 {
-    private readonly ITreeAttribute _bodyWeightTree;
-    private readonly ITreeAttribute _weightBonusTree;
     public override string ToggleKeyCombinationCode => "BodyWeightGui";
     private readonly IReadOnlyList<LabelViewModel> _statsToWatch;
     
@@ -35,19 +32,17 @@ public class BodyWeightGui : GuiDialog
             new LabelViewModel(BonusType.GliderLiftMax),
             new LabelViewModel(BonusType.GliderSpeedMax)
         ];
-        
-        _bodyWeightTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
-        _weightBonusTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY);
     }
 
     public override void OnGuiOpened()
     {
         base.OnGuiOpened();
         
-        UpdateWeightText();
         var watchedAttributes = capi.World.Player.Entity.WatchedAttributes;
         watchedAttributes.RegisterModifiedListener(EntityBehaviourBodyWeight.BEHAVIOUR_KEY, UpdateWeightText);
         watchedAttributes.RegisterModifiedListener(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY, UpdateWeightText);
+        
+        UpdateWeightText();
     }
 
     public override void OnGuiClosed()
@@ -105,18 +100,23 @@ public class BodyWeightGui : GuiDialog
     public override void Dispose()
     {
         Composers.ClearComposers();
+        var watchedAttributes = capi.World.Player.Entity.WatchedAttributes;
+        watchedAttributes.UnregisterListener(UpdateWeightText);
+        
         base.Dispose();
         GC.SuppressFinalize(this);
     }
 
     private void UpdateWeightText()
     {
-        var weight = _bodyWeightTree.GetFloat("weight");
+        var bodyweightTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
+        var weightBonusTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY);
+        var weight = bodyweightTree.GetFloat("weight");
         SetDynamicText("weightText", $"{weight:0.0} kg");
 
         foreach (var viewModel in _statsToWatch)
         {
-            SetDynamicText(viewModel.Key, viewModel.GetValue(_weightBonusTree));
+            SetDynamicText(viewModel.Key, viewModel.GetValue(weightBonusTree));
         }
     }
 
