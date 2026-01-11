@@ -76,6 +76,11 @@ public class MutableConfig : IConfig
     /// </summary>
     [JsonInclude] public float SprintModifier { get; set; } = 0.1f;
 
+    /// <summary>
+    /// Whether the patch that allows for consumption of a whole meal (no portions) is applied
+    /// </summary>
+    [JsonInclude] public bool AlwaysConsumeFullMeal { get; init; } = true;
+
     public SimplyStarvingConfig Freeze()
     {
         return new SimplyStarvingConfig(this);

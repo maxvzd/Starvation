@@ -35,6 +35,10 @@ public class SimpleStarvationModSystem : ModSystem
         {
             _patcher = new Harmony(Mod.Info.ModID);
             _patcher.PatchCategory(Mod.Info.ModID);
+            if (Config.AlwaysConsumeFullMeal)
+            {
+                _patcher.PatchCategory("consumeAllOfMeal");
+            }
         }
 
         CreateCommands(api);

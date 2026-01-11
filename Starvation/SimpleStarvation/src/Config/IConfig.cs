@@ -18,4 +18,5 @@ public interface IConfig
     public float StoodStillModifier { get; }
     public float SleepModifier { get; }
     public float SprintModifier { get; }
+    public bool AlwaysConsumeFullMeal { get; }
 }
