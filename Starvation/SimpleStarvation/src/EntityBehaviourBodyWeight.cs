@@ -125,7 +125,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         var satDiff = _saturationLastTick - hungerBehaviour.Saturation; 
         StoredSaturation += float.Max(0, satDiff);
         
-        entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
+        //entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
     }
 
     private void MetaboliseFoodStores()
@@ -149,12 +149,12 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
                                   + (_timePlayerSpentSprinting * lossPerHour * Config.SprintModifier));
         StoredSaturation -= lossDotJpeg;
             
-        entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
-                                  $"hourLastTick: {_hourAtLastHungerTick}, " +
-                                  $"hourDiff {hourDiff}, " +
-                                  $"lossPerHour:{lossPerHour}, " +
-                                  $"Loss: {lossDotJpeg}");
-        entity.World.Logger.Debug($"hourdiff: {hourDiff}, sleep:{timeAsleep}, active:{timeActive}, stoodStill:{_timePlayerStoodStandingStill}");
+        // entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
+        //                           $"hourLastTick: {_hourAtLastHungerTick}, " +
+        //                           $"hourDiff {hourDiff}, " +
+        //                           $"lossPerHour:{lossPerHour}, " +
+        //                           $"Loss: {lossDotJpeg}");
+        // entity.World.Logger.Debug($"hourdiff: {hourDiff}, sleep:{timeAsleep}, active:{timeActive}, stoodStill:{_timePlayerStoodStandingStill}");
     }
     
     private void TrackPlayerCurrentActions()
