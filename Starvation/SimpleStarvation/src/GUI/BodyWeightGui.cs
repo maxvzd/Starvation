@@ -76,7 +76,7 @@ public class BodyWeightGui : GuiDialog
         //Body Weight
         guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:Nutrition"), CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold)));
         guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:Weight"), CairoFont.WhiteDetailText(), true));
-        guiElements.Add(new DynamicTextElement(ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, 100), "weightText", "0 kg", CairoFont.WhiteDetailText()));
+        guiElements.Add(new DynamicTextElement(ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, 100), "weightText", $"0 {Lang.Get("starvation:Units")}", CairoFont.WhiteDetailText()));
         guiElements.Add(new Spacer());
         
         //Effects
@@ -112,7 +112,7 @@ public class BodyWeightGui : GuiDialog
         var bodyweightTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
         var weightBonusTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY);
         var weight = bodyweightTree.GetFloat("weight");
-        SetDynamicText("weightText", $"{weight:0.0} kg");
+        SetDynamicText("weightText", $"{weight:0.0} {Lang.Get("starvation:Units")}");
 
         foreach (var viewModel in _statsToWatch)
         {

@@ -19,4 +19,5 @@ public interface IConfig
     public float SleepModifier { get; }
     public float SprintModifier { get; }
     public bool AlwaysConsumeFullMeal { get; }
+    public bool ApplyFatalDamageOnCriticalWeight { get; }
 }

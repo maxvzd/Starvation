@@ -90,7 +90,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         _saturationLastTick = hungerBehaviour.Saturation;
         ResetTicks();
 
-        if (BodyWeight < Config.CriticalWeight)
+        if (BodyWeight < Config.CriticalWeight && Config.ApplyFatalDamageOnCriticalWeight)
         {
             entity.ReceiveDamage(new DamageSource
             {
@@ -130,6 +130,8 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 
     private void MetaboliseFoodStores()
     {
+        if (StoredSaturation is null) return;
+        
         var hungerRate = entity.Stats.GetBlended(BonusTypeToKey.GetKey(BonusType.HungerRate));
         
         var hoursPerDay = entity.World.Calendar.HoursPerDay;
@@ -147,7 +149,8 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
                                   + (_timePlayerStoodStandingStill * lossPerHour * Config.StoodStillModifier)
                                   //This one just adds extra and isn't a ratio of stood/sleep/awake 
                                   + (_timePlayerSpentSprinting * lossPerHour * Config.SprintModifier));
-        StoredSaturation -= lossDotJpeg;
+        
+        StoredSaturation = float.Max(0, (float)StoredSaturation - lossDotJpeg);
             
         // entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
         //                           $"hourLastTick: {_hourAtLastHungerTick}, " +

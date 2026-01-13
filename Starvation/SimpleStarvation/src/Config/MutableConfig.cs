@@ -64,22 +64,27 @@ public class MutableConfig : IConfig
     /// <summary>
     /// How much less saturation you consume when standing still
     /// </summary>
-    [JsonInclude] public float StoodStillModifier { get; set; } = 0.25f;
+    [JsonInclude] public float StoodStillModifier { get; init; } = 0.25f;
 
     /// <summary>
     /// How much less saturation you consume when sleeping
     /// </summary>
-    [JsonInclude] public float SleepModifier { get; set; } = 0.25f;
+    [JsonInclude] public float SleepModifier { get; init; } = 0.25f;
     
     /// <summary>
     /// How much extra saturation you burn when sprinting
     /// </summary>
-    [JsonInclude] public float SprintModifier { get; set; } = 0.1f;
+    [JsonInclude] public float SprintModifier { get; init; } = 0.1f;
 
     /// <summary>
     /// Whether the patch that allows for consumption of a whole meal (no portions) is applied
     /// </summary>
     [JsonInclude] public bool AlwaysConsumeFullMeal { get; init; } = true;
+
+    /// <summary>
+    /// Whether damage is applied when the player reaches the critical weight
+    /// </summary>
+    [JsonInclude] public bool ApplyFatalDamageOnCriticalWeight { get; init; } = true;
 
     public SimplyStarvingConfig Freeze()
     {
