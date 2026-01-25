@@ -23,7 +23,7 @@ public class MutableConfig : IConfig
     /// <summary>
     /// Roughly how much saturation you'd expect a player to eat in a day to maintain weight
     /// </summary>
-    [JsonInclude] public float ExpectedSaturationPerDay { get;  init; } = 4000f;
+    [JsonInclude] public float ExpectedSaturationPerDay { get;  init; } = 3500f;
     
     /// <summary>
     /// How long you would starve from a healthy weight of 75kg.
@@ -37,14 +37,14 @@ public class MutableConfig : IConfig
     [JsonInclude] public float ThrowUpThreshold { get; init; } = 250f;
     
     /// <summary>
-    /// Whether or not to apply the bonuses to weight
+    /// Whether to apply the bonuses from the player weight
     /// </summary>
     [JsonInclude] public bool ApplyWeightBonuses { get; init; } = true;
 
     /// <summary>
     /// The percentage of weight to lose on death 
     /// </summary>
-    [JsonInclude] public float WeightLossOnDeath { get; init; } = 30f;
+    [JsonInclude] public float WeightLossOnDeath { get; init; } = 10f;
 
     /// <summary>
     /// The lowest weight a player can be when they respawn
@@ -69,7 +69,7 @@ public class MutableConfig : IConfig
     /// <summary>
     /// How much less saturation you consume when sleeping
     /// </summary>
-    [JsonInclude] public float SleepModifier { get; init; } = 0.25f;
+    [JsonInclude] public float SleepModifier { get; init; } = 0.15f;
     
     /// <summary>
     /// How much extra saturation you burn when sprinting
@@ -85,6 +85,16 @@ public class MutableConfig : IConfig
     /// Whether damage is applied when the player reaches the critical weight
     /// </summary>
     [JsonInclude] public bool ApplyFatalDamageOnCriticalWeight { get; init; } = true;
+
+    /// <summary>
+    /// Used to tune the average weight gain check. How many hours the average weight gain check is based on
+    /// </summary>
+    [JsonInclude] public float AverageGainCheckWindowInHours { get; init; } = 12f;
+    
+    /// <summary>
+    /// Used to tune the average weight gain check. How long between the average weight checks.
+    /// </summary>
+    [JsonInclude] public float AverageGainCheckFrequencyInHours { get; init; } = 1f;
 
     public SimplyStarvingConfig Freeze()
     {

@@ -60,13 +60,13 @@ public class SimplyStarvingConfig : IConfig
     }
 
     public float HealthyWeight => float.Clamp(_config.HealthyWeight, CriticalWeight, MaxWeight);
-    public float CriticalWeight => float.Min(_config.CriticalWeight, 0);
+    public float CriticalWeight => float.Max(_config.CriticalWeight, 0);
     public float MaxWeight => _config.MaxWeight;
     public float ExpectedSaturationPerDay => _config.ExpectedSaturationPerDay;
     public float NumberOfMonthsToStarve => _config.NumberOfMonthsToStarve;
     public float ThrowUpThreshold => float.Max(_config.ThrowUpThreshold, 0);
     public bool ApplyWeightBonuses => _config.ApplyWeightBonuses;
-    public float WeightLossOnDeath => float.Clamp(_config.WeightLossOnDeath, 0, 1);
+    public float WeightLossOnDeath => float.Clamp(_config.WeightLossOnDeath, 0, 100);
     public float LowestPossibleWeightOnRespawn => float.Clamp(_config.LowestPossibleWeightOnRespawn, CriticalWeight, MaxWeight);
     public float PlayerStartingWeight => float.Clamp(_config.PlayerStartingWeight, CriticalWeight, MaxWeight);
     public IReadOnlyList<Bonus>? WeightBonuses => _config.WeightBonuses;
@@ -75,4 +75,6 @@ public class SimplyStarvingConfig : IConfig
     public float SprintModifier => float.Clamp(_config.SprintModifier, 0 ,1);
     public bool AlwaysConsumeFullMeal => _config.AlwaysConsumeFullMeal;
     public bool ApplyFatalDamageOnCriticalWeight => _config.ApplyFatalDamageOnCriticalWeight;
+    public float AverageGainCheckWindowInHours => float.Clamp(_config.AverageGainCheckWindowInHours, 0, 24);
+    public float AverageGainCheckFrequencyInHours => float.Clamp(_config.AverageGainCheckFrequencyInHours, .5f, AverageGainCheckWindowInHours);
 }

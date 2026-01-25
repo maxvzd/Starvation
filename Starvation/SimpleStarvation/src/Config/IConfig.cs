@@ -20,4 +20,6 @@ public interface IConfig
     public float SprintModifier { get; }
     public bool AlwaysConsumeFullMeal { get; }
     public bool ApplyFatalDamageOnCriticalWeight { get; }
+    public float AverageGainCheckWindowInHours { get; }
+    public float AverageGainCheckFrequencyInHours { get; }
 }

@@ -37,4 +37,11 @@ public class ServerCommandHandlers(ICoreServerAPI serverApi
         var weightSetTo = weightBehaviour.SetBodyWeight(weightAsFloat);
         return TextCommandResult.Success($"{playerName}'s weight set to {weightSetTo}");
     }
+
+    public TextCommandResult ClearPlayerTrend(TextCommandCallingArgs args)
+    {
+        var weightBehaviour = args.Caller.Entity.GetBehavior<EntityBehaviourBodyWeight>();
+        weightBehaviour?.ClearAverageGain();
+        return TextCommandResult.Success($"Cleared average weight gain");
+    }
 }

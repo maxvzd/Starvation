@@ -1,4 +1,5 @@
-﻿using SimpleStarvation.Config;
+﻿using System.Collections.Generic;
+using SimpleStarvation.Config;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
@@ -10,21 +11,30 @@ namespace SimpleStarvation;
 
 public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
 {
+    public const string AVERAGE_GAIN_COUNT = "average-gain-count";
+    public const string AVERAGE_GAIN_KEY = "average-gain-";
+    public const string AVERAGE_GAIN_TREE_KEY = "average-gain-";
+    
     private float _saturationLastTick = 0f;
     private double _hourAtLastHungerTick = 0f;
     private double _hourAtLastTick = 0f;
     private float _hungerTick = 0f;
     private ITreeAttribute? _bodyWeightTree;
-    
+    private ITreeAttribute? _weightTrendTree;
+
     private double _timePlayerSpentSleeping;
     private long _timePlayerLastMoved;
     private double _timePlayerStoodStandingStill;
     private double _timePlayerSpentSprinting;
 
+    private double _hourAtLastTrendTick;
+    private float _weightAtLastTrendTick;
+    private readonly Queue<double> _deltaWeights = new();
+
     private static SimplyStarvingConfig Config => SimpleStarvationModSystem.Config ?? new MutableConfig().Freeze();
-    private float WeightToSaturationScale =>  AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
+    private float WeightToSaturationScale => AmountOfSatToStarve / (Config.HealthyWeight - Config.CriticalWeight);
     private float AmountOfSatToStarve => Config.ExpectedSaturationPerDay * entity.World.Calendar.DaysPerMonth * Config.NumberOfMonthsToStarve;
-    
+
     public override string PropertyName() => BEHAVIOUR_KEY;
     public const string BEHAVIOUR_KEY = "body-weight";
 
@@ -56,20 +66,34 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
             entity.RemoveBehavior(this);
             return;
         }
-        
+
         base.Initialize(properties, attributes);
         var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
         if (hungerBehaviour is not null)
         {
             _saturationLastTick = hungerBehaviour.Saturation;
         }
-        
+
         _bodyWeightTree = entity.WatchedAttributes.GetTreeAttribute(PropertyName());
         if (_bodyWeightTree is null)
         {
             entity.WatchedAttributes.SetAttribute(PropertyName(), _bodyWeightTree = new TreeAttribute());
             StoredSaturation = GetSatForWeight(Config.PlayerStartingWeight);
         }
+        
+        _weightTrendTree = _bodyWeightTree.GetOrAddTreeAttribute(AVERAGE_GAIN_TREE_KEY);
+        var existingEntriesCount = _weightTrendTree.GetInt(AVERAGE_GAIN_COUNT);
+        for (var i = 0; i < existingEntriesCount; i++)
+        {
+            _deltaWeights.Enqueue(_weightTrendTree.GetDouble($"{AVERAGE_GAIN_KEY}{i}"));
+        }
+    }
+    
+    public override void OnEntitySpawn()
+    {
+        base.OnEntitySpawn();
+        ResetTicks();
+        ResetTrendTick();
     }
 
     public override void OnGameTick(float deltaTime)
@@ -77,16 +101,18 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         if (entity.World.Side != EnumAppSide.Server || PlayerHelper.IsPlayerInCreative(entity)) return;
 
         TrackPlayerCurrentActions();
-        
+
         _hungerTick += deltaTime;
         if (_hungerTick < 10) return;
-       
+
         var hungerBehaviour = entity.GetBehavior<EntityBehaviorHunger>();
         if (hungerBehaviour is null) return;
 
         DigestFood(hungerBehaviour);
         MetaboliseFoodStores();
-            
+
+        CalculateAverageGain();
+
         _saturationLastTick = hungerBehaviour.Saturation;
         ResetTicks();
 
@@ -99,7 +125,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
             }, 2.5f); //A quick painful death 
         }
     }
-    
+
     public float SetBodyWeight(float weight)
     {
         weight = float.Clamp(weight, Config.CriticalWeight, Config.MaxWeight);
@@ -107,11 +133,11 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         StoredSaturation = satForWeight;
         return weight;
     }
-    
+
     public void ResetTicks()
     {
         var now = entity.World.Calendar.TotalHours;
-        
+
         _hourAtLastTick = now;
         _hungerTick = 0f;
         _hourAtLastHungerTick = now;
@@ -120,22 +146,32 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         _timePlayerSpentSprinting = 0f;
     }
 
+    public void ResetTrendTick()
+    {
+        _weightAtLastTrendTick = GetWeightForSat(StoredSaturation ?? 0);
+        _hourAtLastTrendTick = entity.World.Calendar.TotalHours;
+    }
+
     private void DigestFood(EntityBehaviorHunger hungerBehaviour)
     {
-        var satDiff = _saturationLastTick - hungerBehaviour.Saturation; 
+        var satDiff = _saturationLastTick - hungerBehaviour.Saturation;
         StoredSaturation += float.Max(0, satDiff);
-        
+
         //entity.World.Logger.Debug($"Digesting: _saturationLastTick: {_saturationLastTick}, currSat: {hungerBehaviour.Saturation}, StoredSaturation: {StoredSaturation} BodyWeight: {BodyWeight}, Gain: {satDiff}");
+    }
+
+    private float GetExpectedWeightLossPerHour()
+    {
+        var hoursPerDay = entity.World.Calendar.HoursPerDay;
+        var hungerRate = entity.Stats.GetBlended(BonusTypeToKey.GetKey(BonusType.HungerRate));
+        return Config.ExpectedSaturationPerDay / hoursPerDay * hungerRate * GlobalConstants.HungerSpeedModifier;
     }
 
     private void MetaboliseFoodStores()
     {
         if (StoredSaturation is null) return;
         
-        var hungerRate = entity.Stats.GetBlended(BonusTypeToKey.GetKey(BonusType.HungerRate));
-        
-        var hoursPerDay = entity.World.Calendar.HoursPerDay;
-        var lossPerHour = Config.ExpectedSaturationPerDay / hoursPerDay * hungerRate * GlobalConstants.HungerSpeedModifier;
+        var lossPerHour = GetExpectedWeightLossPerHour();
         var hourDiff = CalculateTimeSinceHungerLastChecked();
 
         var timeAsleep = double.Min(_timePlayerSpentSleeping, hourDiff);
@@ -143,15 +179,15 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         
         var timeActive = timeAwake - _timePlayerStoodStandingStill;
 
-        var lossDotJpeg = (float)((timeActive * lossPerHour) 
-                                  + (timeAsleep * lossPerHour * Config.SleepModifier) 
+        var lossDotJpeg = (float)((timeActive * lossPerHour)
+                                  + (timeAsleep * lossPerHour * Config.SleepModifier)
                                   //Emulate vanilla logic of less digestion when stood still
                                   + (_timePlayerStoodStandingStill * lossPerHour * Config.StoodStillModifier)
                                   //This one just adds extra and isn't a ratio of stood/sleep/awake 
                                   + (_timePlayerSpentSprinting * lossPerHour * Config.SprintModifier));
         
         StoredSaturation = float.Max(0, (float)StoredSaturation - lossDotJpeg);
-            
+        
         // entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
         //                           $"hourLastTick: {_hourAtLastHungerTick}, " +
         //                           $"hourDiff {hourDiff}, " +
@@ -190,20 +226,44 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         {
             _timePlayerSpentSprinting += deltaHour;
         }
+
         _hourAtLastTick = now;
     }
     
+    private void CalculateAverageGain()
+    {
+        //Track weight change over last X hours
+        var now = entity.World.Calendar.TotalHours;
+        var timeDifference = now - _hourAtLastTrendTick;
+
+        if (timeDifference == 0) return;
+        
+        if (timeDifference > Config.AverageGainCheckFrequencyInHours)
+        {
+            while (_deltaWeights.Count > Config.AverageGainCheckWindowInHours / Config.AverageGainCheckFrequencyInHours)
+            {
+                _deltaWeights.Dequeue();
+            }
+            
+            var currentWeight = GetWeightForSat(StoredSaturation ?? 0);
+            var weightDelta = currentWeight - _weightAtLastTrendTick;
+            
+            _deltaWeights.Enqueue(weightDelta);
+            _weightTrendTree?.SetInt(AVERAGE_GAIN_COUNT, _deltaWeights.Count);
+            for (var i = 0; i < _deltaWeights.Count; i++)
+            {
+                _weightTrendTree?.SetDouble($"{AVERAGE_GAIN_KEY}{i}", _deltaWeights.ToArray()[i]);
+            }
+            
+            ResetTrendTick();
+        }
+    }
+
     private double CalculateTimeSinceHungerLastChecked()
     {
         var now = entity.World.Calendar.TotalHours;
         var diff = now - _hourAtLastHungerTick;
         return diff;
-    }
-
-    public override void OnEntitySpawn()
-    {
-        base.OnEntitySpawn();
-        ResetTicks();
     }
 
     public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)
@@ -219,8 +279,24 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         var satAtLowestWeightPossible = GetSatForWeight(Config.LowestPossibleWeightOnRespawn);
 
         newSaturation = float.Max(satAtLowestWeightPossible, newSaturation);
-            
+        
         StoredSaturation = newSaturation;
+        
+        ResetTicks();
+        ResetTrendTick();
+        ClearAverageGain();
+    }
+
+    public void ClearAverageGain()
+    {
+        _deltaWeights.Clear();
+        
+        var numberToClear = _weightTrendTree?.GetInt(AVERAGE_GAIN_COUNT) ?? 0;
+        _weightTrendTree?.SetInt(AVERAGE_GAIN_COUNT, 0);
+        for (var i = 0; i < numberToClear; i++)
+        {
+            _weightTrendTree?.RemoveAttribute($"{AVERAGE_GAIN_KEY}{i}");
+        }
     }
     
     public void CheckForThrowUp()
@@ -229,25 +305,30 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         if (hunger is null) return;
 
         if (hunger.Saturation < hunger.MaxSaturation + Config.ThrowUpThreshold) return;
-        
+
         CreateThrowUpParticles();
         _saturationLastTick = 0;
-        
+
         //Apply effect?
         hunger.Saturation = 0f;
         entity.ReceiveDamage(new DamageSource
         {
-            Source = EnumDamageSource.Internal, 
+            Source = EnumDamageSource.Internal,
             Type = EnumDamageType.Hunger
         }, 0.5f);
     }
-    
+
     private void UpdateBodyWeight()
     {
-        BodyWeight = Config.CriticalWeight + StoredSaturation / WeightToSaturationScale;
+        BodyWeight = GetWeightForSat(StoredSaturation ?? 0);
         entity.GetBehavior<EntityBehaviourWeightBonuses>()?.SetWeightBonuses();
     }
-    
+
+    private float GetWeightForSat(float saturation)
+    {
+        return Config.CriticalWeight + saturation / WeightToSaturationScale;
+    }
+
     private float GetSatForWeight(float weightInKg)
     {
         var weightDiff = weightInKg - Config.CriticalWeight;

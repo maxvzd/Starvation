@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 
 namespace SimpleStarvation.GUI;
 
@@ -77,6 +78,8 @@ public class BodyWeightGui : GuiDialog
         guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:Nutrition"), CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold)));
         guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:Weight"), CairoFont.WhiteDetailText(), true));
         guiElements.Add(new DynamicTextElement(ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, 100), "weightText", $"0 {Lang.Get("starvation:Units")}", CairoFont.WhiteDetailText()));
+        guiElements.Add(new StaticTextElement(ElementBounds.Fixed(0, 0, columnOneWidth, 100), Lang.Get("starvation:AverageGain"), CairoFont.WhiteDetailText(), true));
+        guiElements.Add(new DynamicTextElement(ElementBounds.Fixed(columnOneWidth, 0, columnTwoWidth, 100), "averageGainText", $"0 {Lang.Get("starvation:Units")}", CairoFont.WhiteDetailText()));
         guiElements.Add(new Spacer());
         
         //Effects
@@ -111,13 +114,32 @@ public class BodyWeightGui : GuiDialog
     {
         var bodyweightTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourBodyWeight.BEHAVIOUR_KEY);
         var weightBonusTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute(EntityBehaviourWeightBonuses.BEHAVIOUR_KEY);
+        
         var weight = bodyweightTree.GetFloat("weight");
         SetDynamicText("weightText", $"{weight:0.0} {Lang.Get("starvation:Units")}");
-
+        
+        UpdateAverageWeightText(bodyweightTree);
+        
         foreach (var viewModel in _statsToWatch)
         {
             SetDynamicText(viewModel.Key, viewModel.GetValue(weightBonusTree));
         }
+    }
+
+    private void UpdateAverageWeightText(ITreeAttribute bodyweightTree)
+    {
+        var bodyweightTrendTree = bodyweightTree.GetTreeAttribute(EntityBehaviourBodyWeight.AVERAGE_GAIN_TREE_KEY);
+        var trendCount = bodyweightTrendTree.GetInt(EntityBehaviourBodyWeight.AVERAGE_GAIN_COUNT);
+        if (trendCount < 1) return;
+        
+        var weightDeltas = new List<double>();
+        for (var i = 0; i < trendCount; i++)
+        {
+            weightDeltas.Add(bodyweightTrendTree.GetDouble($"{EntityBehaviourBodyWeight.AVERAGE_GAIN_KEY}{i}"));
+        }
+        var weightTrend = weightDeltas.Average();
+        var prefix = weightTrend > 0 ? "+" : string.Empty;
+        SetDynamicText("averageGainText", $"{prefix}{weightTrend:0.000} {Lang.Get("starvation:Units")}");
     }
 
     private void SetDynamicText(string key, string text)

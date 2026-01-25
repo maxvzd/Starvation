@@ -47,7 +47,11 @@ public class SimpleStarvationModSystem : ModSystem
         api.Event.PlayerSwitchGameMode += player =>
         {
             player.Entity.GetBehavior<EntityBehaviourWeightBonuses>()?.SetWeightBonuses();
-            player.Entity.GetBehavior<EntityBehaviourBodyWeight>()?.ResetTicks();
+            
+            var bodyWeight = player.Entity.GetBehavior<EntityBehaviourBodyWeight>();
+            bodyWeight?.ResetTicks();
+            bodyWeight?.ResetTrendTick();
+            bodyWeight?.ClearAverageGain();
         };
     }
 
@@ -71,6 +75,12 @@ public class SimpleStarvationModSystem : ModSystem
             .HandleWith(commandsHandler.SetPlayerWeightHandler)
             .WithDescription("Sets the players body weight")
             .WithArgs(api.ChatCommands.Parsers.Word("player"), api.ChatCommands.Parsers.Float("weight"))
+            .EndSubCommand()
+        
+            .BeginSubCommand("clearaveragegain")
+            .HandleWith(commandsHandler.ClearPlayerTrend)
+            .WithDescription("Clears the player's average weight tree")
+            .WithArgs(api.ChatCommands.Parsers.OptionalWord("player"))
             .EndSubCommand();
     }
 
