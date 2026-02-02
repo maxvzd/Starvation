@@ -37,7 +37,11 @@ public class SimplyStarvingConfig : IConfig
             new(BonusType.RangeWeaponAccuracy, -0.6f, 40),
             new(BonusType.RangeWeaponAccuracy, 0.1f, 60),
             new(BonusType.RangeWeaponAccuracy, 0.3f, 80),
-            new(BonusType.RangeWeaponAccuracy, 0.1f, 100),
+            new(BonusType.RangeWeaponAccuracy, 0.1f, 100), 
+            
+            new(BonusType.RangedWeaponsSpeed, -0.6f, 40),
+            new(BonusType.RangedWeaponsSpeed, 0f, 60),
+            new(BonusType.RangedWeaponsSpeed, 0.2f, 100),
             
             new(BonusType.RustyGearDropRate, .3f, 40),
             new(BonusType.RustyGearDropRate, 0, 60),

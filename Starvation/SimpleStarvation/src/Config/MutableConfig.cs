@@ -92,7 +92,7 @@ public class MutableConfig : IConfig
     [JsonInclude] public float AverageGainCheckWindowInHours { get; init; } = 12f;
     
     /// <summary>
-    /// Used to tune the average weight gain check. How long between the average weight checks.
+    /// Used to tune the average weight gain check. How long between the average weight checks
     /// </summary>
     [JsonInclude] public float AverageGainCheckFrequencyInHours { get; init; } = 1f;
 
