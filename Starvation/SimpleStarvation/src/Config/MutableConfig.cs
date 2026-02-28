@@ -23,7 +23,7 @@ public class MutableConfig : IConfig
     /// <summary>
     /// Roughly how much saturation you'd expect a player to eat in a day to maintain weight
     /// </summary>
-    [JsonInclude] public float ExpectedSaturationPerDay { get;  init; } = 3500f;
+    [JsonInclude] public float ExpectedSaturationPerDay { get;  init; } = 2500;
     
     /// <summary>
     /// How long you would starve from a healthy weight of 75kg.
@@ -44,7 +44,7 @@ public class MutableConfig : IConfig
     /// <summary>
     /// The percentage of weight to lose on death 
     /// </summary>
-    [JsonInclude] public float WeightLossOnDeath { get; init; } = 10f;
+    [JsonInclude] public float WeightLossOnDeath { get; init; } = 3f;
 
     /// <summary>
     /// The lowest weight a player can be when they respawn
