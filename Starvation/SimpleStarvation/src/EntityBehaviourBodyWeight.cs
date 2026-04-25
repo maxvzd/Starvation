@@ -116,7 +116,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
         _saturationLastTick = hungerBehaviour.Saturation;
         ResetTicks();
 
-        if (BodyWeight < Config.CriticalWeight && Config.ApplyFatalDamageOnCriticalWeight)
+        if (BodyWeight < Config.CriticalWeight && hungerBehaviour.Saturation <= 0 && Config.ApplyFatalDamageOnCriticalWeight)
         {
             entity.ReceiveDamage(new DamageSource
             {
@@ -186,7 +186,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
                                   //This one just adds extra and isn't a ratio of stood/sleep/awake 
                                   + (_timePlayerSpentSprinting * lossPerHour * Config.SprintModifier));
         
-        StoredSaturation = float.Max(0, (float)StoredSaturation - lossDotJpeg);
+        StoredSaturation = (float)StoredSaturation - lossDotJpeg;
         
         // entity.World.Logger.Debug($"Metabolising: currentHour: {entity.World.Calendar.TotalHours}, " +
         //                           $"hourLastTick: {_hourAtLastHungerTick}, " +
@@ -341,7 +341,7 @@ public class EntityBehaviourBodyWeight(Entity entity) : EntityBehavior(entity)
     {
         // Use the engine-provided view vector to avoid yaw/pitch sign convention issues.
         // This should point "where the entity looks".
-        var forward = entity.SidedPos.GetViewVector().Clone();
+        var forward = entity.Pos.GetViewVector().Clone();
         if (forward.Length() < 1e-4f)
         {
             forward = new Vec3f(0, 0, 1);

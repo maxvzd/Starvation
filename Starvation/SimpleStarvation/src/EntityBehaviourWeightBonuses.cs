@@ -72,7 +72,9 @@ public class EntityBehaviourWeightBonuses(Entity entity) : EntityBehavior(entity
         if (currentBodyWeight < orderedBonuses[0].Weight)
         {
             var bonusAbove = orderedBonuses[0];
-            var bonusBelow = new Bonus(bonusAbove.Type, 0, Config.CriticalWeight);
+            var value = bonusAbove.Value < 0 ? bonusAbove.Value : 0;
+            
+            var bonusBelow = new Bonus(bonusAbove.Type, value, Config.CriticalWeight);
             return LerpBonus(bonusBelow, bonusAbove, currentBodyWeight);
         }
         
